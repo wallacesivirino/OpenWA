@@ -603,7 +603,8 @@
       "sticker": "Figurinha",
       "poll": "Enquete",
       "forward": "Encaminhar",
-      "bulk": "Em massa"
+      "bulk": "Em massa",
+      "buttons": "Botões"
     },
     "messageContent": "Conteúdo da mensagem",
     "messagePlaceholder": "Digite sua mensagem aqui...",
@@ -672,7 +673,16 @@
       "progress": "Enviadas {{sent}} de {{total}} · {{failed}} falharam · {{pending}} pendentes",
       "cancel": "Cancelar lote",
       "cancelling": "Cancelando..."
-    }
+    },
+    "buttonsText": "Texto da mensagem",
+    "buttonsTextPlaceholder": "Wallace tudo bem ?",
+    "buttonsFooter": "Rodapé (opcional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Botões",
+    "buttonLabelPlaceholder": "Rótulo {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Adicionar botão",
+    "buttonsHint": "Até 3 botões. O \"id\" volta no webhook quando a pessoa toca."
   },
   "templates": {
     "title": "Modelos",

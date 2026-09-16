@@ -667,7 +667,8 @@
       "sticker": "ملصق",
       "poll": "استطلاع",
       "forward": "إعادة توجيه",
-      "bulk": "جماعي"
+      "bulk": "جماعي",
+      "buttons": "Buttons"
     },
     "messageContent": "محتوى الرسالة",
     "messagePlaceholder": "أدخل رسالتك هنا...",
@@ -736,7 +737,16 @@
       "progress": "تم إرسال {{sent}} من {{total}} · {{failed}} فشلت · {{pending}} قيد الانتظار",
       "cancel": "إلغاء الدفعة",
       "cancelling": "جارٍ الإلغاء..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "infrastructure": {
     "title": "البنية التحتية",

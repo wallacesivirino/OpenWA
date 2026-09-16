@@ -652,7 +652,8 @@
       "sticker": "贴纸",
       "poll": "投票",
       "forward": "转发",
-      "bulk": "批量"
+      "bulk": "批量",
+      "buttons": "Buttons"
     },
     "messageContent": "消息内容",
     "messagePlaceholder": "在此输入你的消息...",
@@ -721,7 +722,16 @@
       "progress": "已发送 {{sent}}/{{total}} · {{failed}} 失败 · {{pending}} 待发送",
       "cancel": "取消批次",
       "cancelling": "取消中..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "infrastructure": {
     "title": "基础设施",

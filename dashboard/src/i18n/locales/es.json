@@ -603,7 +603,8 @@
       "sticker": "Sticker",
       "poll": "Encuesta",
       "forward": "Reenviar",
-      "bulk": "Masivo"
+      "bulk": "Masivo",
+      "buttons": "Botones"
     },
     "messageContent": "Contenido del mensaje",
     "messagePlaceholder": "Escribe tu mensaje aquí...",
@@ -672,7 +673,16 @@
       "progress": "Enviados {{sent}} de {{total}} · {{failed}} fallidos · {{pending}} pendientes",
       "cancel": "Cancelar lote",
       "cancelling": "Cancelando..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "templates": {
     "title": "Plantillas",

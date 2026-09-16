@@ -652,7 +652,8 @@
       "sticker": "Sticker",
       "poll": "Umfrage",
       "forward": "Weiterleiten",
-      "bulk": "Massenversand"
+      "bulk": "Massenversand",
+      "buttons": "Buttons"
     },
     "messageContent": "Nachrichteninhalt",
     "messagePlaceholder": "Gib hier deine Nachricht ein...",
@@ -721,7 +722,16 @@
       "progress": "{{sent}} von {{total}} gesendet · {{failed}} fehlgeschlagen · {{pending}} ausstehend",
       "cancel": "Batch abbrechen",
       "cancelling": "Wird abgebrochen..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "infrastructure": {
     "title": "Infrastruktur",

@@ -39,6 +39,7 @@ const messageTypes = [
   'contact',
   'sticker',
   'poll',
+  'buttons',
   'forward',
   'bulk',
 ] as const;
@@ -57,6 +58,7 @@ const mediaAccept: Record<(typeof messageTypes)[number], string> = {
   contact: '*/*',
   sticker: 'image/*',
   poll: '*/*',
+  buttons: '*/*',
   forward: '*/*',
   bulk: '*/*',
 };
@@ -73,6 +75,7 @@ const fallbackMime: Record<(typeof messageTypes)[number], string> = {
   contact: 'application/octet-stream',
   sticker: 'image/webp',
   poll: 'application/octet-stream',
+  buttons: 'application/octet-stream',
   forward: 'application/octet-stream',
   bulk: 'application/octet-stream',
 };
@@ -124,6 +127,13 @@ export function MessageTester() {
   const [locationAddress, setLocationAddress] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [buttonsText, setButtonsText] = useState('');
+  const [buttonsFooter, setButtonsFooter] = useState('');
+  // WhatsApp renders at most 3 quick-reply buttons; the backend rejects more.
+  const [buttons, setButtons] = useState<{ id: string; text: string }[]>([
+    { id: 'sim', text: 'Sim' },
+    { id: 'nao', text: 'Nao' },
+  ]);
   const [pollQuestion, setPollQuestion] = useState('');
   // WhatsApp caps polls at 2..12 options; rows are trimmed and empty ones dropped at send time.
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
@@ -267,6 +277,9 @@ export function MessageTester() {
   const isMediaMessageType = mediaMessageTypes.includes(messageType);
   const bulkRecipientList = parseBulkRecipients(bulkRecipients);
   const pollOptionsFilled = pollOptions.map(o => o.trim()).filter(o => o.length > 0);
+  const buttonsFilled = buttons
+    .map(b => ({ id: b.id.trim(), text: b.text.trim() }))
+    .filter(b => b.id.length > 0 && b.text.length > 0);
   const lat = parseFloat(latitude);
   const lng = parseFloat(longitude);
   const delayMs = bulkDelay.trim() === '' ? undefined : parseInt(bulkDelay, 10);
@@ -280,6 +293,8 @@ export function MessageTester() {
     formValid = contactName.trim().length > 0 && contactNumber.trim().length > 0;
   } else if (messageType === 'sticker') {
     formValid = !!mediaFile || mediaUrl.trim().length > 0;
+  } else if (messageType === 'buttons') {
+    formValid = buttonsText.trim().length > 0 && buttonsFilled.length >= 1;
   } else if (messageType === 'poll') {
     formValid = pollQuestion.trim().length > 0 && pollOptionsFilled.length >= 2;
   } else if (messageType === 'forward') {
@@ -397,6 +412,14 @@ export function MessageTester() {
             name: pollQuestion.trim(),
             options: pollOptionsFilled,
             ...(allowMultipleAnswers ? { allowMultipleAnswers: true } : {}),
+          });
+          break;
+        case 'buttons':
+          result = await messageApi.sendButtons(session, {
+            chatId,
+            text: buttonsText.trim(),
+            buttons: buttonsFilled,
+            ...(buttonsFooter.trim() ? { footer: buttonsFooter.trim() } : {}),
           });
           break;
         case 'forward': {
@@ -730,6 +753,74 @@ export function MessageTester() {
                   onChange={e => setContactNumber(e.target.value)}
                   placeholder="+62812345678"
                 />
+              </div>
+            </>
+          )}
+
+          {messageType === 'buttons' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="mt-btn-text">{t('messageTester.buttonsText')}</label>
+                <textarea
+                  id="mt-btn-text"
+                  value={buttonsText}
+                  onChange={e => setButtonsText(e.target.value)}
+                  placeholder={t('messageTester.buttonsTextPlaceholder')}
+                  rows={3}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="mt-btn-footer">{t('messageTester.buttonsFooter')}</label>
+                <input
+                  id="mt-btn-footer"
+                  type="text"
+                  value={buttonsFooter}
+                  onChange={e => setButtonsFooter(e.target.value)}
+                  placeholder={t('messageTester.buttonsFooterPlaceholder')}
+                />
+              </div>
+              <div className="form-group">
+                <label>{t('messageTester.buttonsList')}</label>
+                {buttons.map((btn, index) => (
+                  <div className="poll-option-row" key={index}>
+                    <input
+                      type="text"
+                      value={btn.text}
+                      maxLength={20}
+                      onChange={e =>
+                        setButtons(prev => prev.map((b, i) => (i === index ? { ...b, text: e.target.value } : b)))
+                      }
+                      placeholder={t('messageTester.buttonLabelPlaceholder', { index: index + 1 })}
+                    />
+                    <input
+                      type="text"
+                      value={btn.id}
+                      maxLength={64}
+                      onChange={e =>
+                        setButtons(prev => prev.map((b, i) => (i === index ? { ...b, id: e.target.value } : b)))
+                      }
+                      placeholder={t('messageTester.buttonIdPlaceholder')}
+                    />
+                    <button
+                      type="button"
+                      className="remove-option-btn"
+                      onClick={() => setButtons(prev => prev.filter((_, i) => i !== index))}
+                      disabled={buttons.length <= 1}
+                      aria-label={t('messageTester.removeOption')}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="add-option-btn"
+                  onClick={() => setButtons(prev => [...prev, { id: '', text: '' }])}
+                  disabled={buttons.length >= 3}
+                >
+                  <Plus size={14} /> {t('messageTester.addButton')}
+                </button>
+                <span className="hint">{t('messageTester.buttonsHint')}</span>
               </div>
             </>
           )}

@@ -652,7 +652,8 @@
       "sticker": "Çıkartma",
       "poll": "Anket",
       "forward": "İlet",
-      "bulk": "Toplu"
+      "bulk": "Toplu",
+      "buttons": "Buttons"
     },
     "messageContent": "Mesaj İçeriği",
     "messagePlaceholder": "Mesajınızı buraya girin...",
@@ -721,7 +722,16 @@
       "progress": "{{total}} içerisinden {{sent}} gönderildi · {{failed}} başarısız · {{pending}} beklemede",
       "cancel": "Toplu İşlemi İptal Et",
       "cancelling": "İptal ediliyor..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "infrastructure": {
     "title": "Altyapı",

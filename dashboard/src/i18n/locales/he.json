@@ -661,7 +661,8 @@
       "sticker": "מדבקה",
       "poll": "סקר",
       "forward": "העברה",
-      "bulk": "מרובה"
+      "bulk": "מרובה",
+      "buttons": "Buttons"
     },
     "messageContent": "תוכן ההודעה",
     "messagePlaceholder": "יש להזין כאן את ההודעה...",
@@ -730,7 +731,16 @@
       "progress": "נשלחו {{sent}} מתוך {{total}} · {{failed}} נכשלו · {{pending}} ממתינים",
       "cancel": "ביטול אצווה",
       "cancelling": "מבטל..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "infrastructure": {
     "title": "תשתית",

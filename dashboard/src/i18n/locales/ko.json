@@ -652,7 +652,8 @@
       "sticker": "스티커",
       "poll": "투표",
       "forward": "전달",
-      "bulk": "대량"
+      "bulk": "대량",
+      "buttons": "Buttons"
     },
     "messageContent": "메시지 내용",
     "messagePlaceholder": "메시지를 입력하세요...",
@@ -721,7 +722,16 @@
       "progress": "{{total}}개 중 {{sent}}개 전송됨 · {{failed}}개 실패 · {{pending}}개 대기 중",
       "cancel": "배치 취소",
       "cancelling": "취소 중..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "infrastructure": {
     "title": "인프라",
