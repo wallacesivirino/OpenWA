@@ -316,7 +316,10 @@
       "created": "تاريخ الإنشاء",
       "lastActive": "آخر نشاط",
       "autoRejectCalls": "الرفض التلقائي للمكالمات",
-      "autoRejectCallsHint": "يتم رفض المكالمات الواردة فور رنينها. ولا يزال الويب هوك call.received يُرسل قبل ذلك. يسري على المكالمة التالية — دون الحاجة إلى إعادة التشغيل."
+      "autoRejectCallsHint": "يتم رفض المكالمات الواردة فور رنينها. ولا يزال الويب هوك call.received يُرسل قبل ذلك. يسري على المكالمة التالية — دون الحاجة إلى إعادة التشغيل.",
+      "autoRejectAllowlist": "Exceptions (never reject these numbers)",
+      "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
+      "autoRejectAllowlistHint": "One number per line, any format — only digits are compared. Leave empty to reject every call. A caller behind a privacy id (@lid) carries no number and is rejected even if listed."
     },
     "proxy": {
       "title": "Proxy Configuration",

@@ -305,7 +305,10 @@
       "created": "创建时间",
       "lastActive": "上次活跃",
       "autoRejectCalls": "自动拒接来电",
-      "autoRejectCallsHint": "来电响铃后立即拒接。call.received webhook 仍会先行触发。下一通来电起生效，无需重启。"
+      "autoRejectCallsHint": "来电响铃后立即拒接。call.received webhook 仍会先行触发。下一通来电起生效，无需重启。",
+      "autoRejectAllowlist": "Exceptions (never reject these numbers)",
+      "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
+      "autoRejectAllowlistHint": "One number per line, any format — only digits are compared. Leave empty to reject every call. A caller behind a privacy id (@lid) carries no number and is rejected even if listed."
     },
     "proxy": {
       "title": "Proxy Configuration",

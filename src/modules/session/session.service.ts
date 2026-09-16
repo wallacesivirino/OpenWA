@@ -30,6 +30,7 @@ import { SessionErrorStore } from './session-error-store.service';
 import { SessionRestrictionStore } from './session-restriction-store.service';
 import { PresenceStore, type ChatPresence } from './presence-store.service';
 import { SessionEngineLifecycle, resolveReconnectConfig } from './session-engine-lifecycle.service';
+import { normalizeAllowlist } from './call-allowlist';
 import { SessionOwnershipService } from './session-ownership.service';
 import { paginate, ListOptions, resolveListWindow } from '../../common/utils/paginate';
 import { isUniqueViolation } from '../../common/utils/db-errors';
@@ -382,6 +383,9 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       // Strict `=== true` mirrors maybeAutoRejectCall: a truthy string or 1 left in the opaque blob
       // must not read as opted in here when it would not opt in there.
       autoRejectCalls: config?.autoRejectCalls === true,
+      autoRejectCallsAllowlist: Array.isArray(config?.autoRejectCallsAllowlist)
+        ? normalizeAllowlist(config.autoRejectCallsAllowlist as string[])
+        : [],
       maxReconnectAttempts: Number.isFinite(maxAttempts) ? maxAttempts : null,
       reconnectBaseDelay: baseDelay,
     };
@@ -410,11 +414,22 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
     const session = await this.findOne(id);
     const config = { ...(session.config ?? {}) };
 
-    for (const key of ['autoRejectCalls', 'maxReconnectAttempts', 'reconnectBaseDelay'] as const) {
+    for (const key of [
+      'autoRejectCalls',
+      'autoRejectCallsAllowlist',
+      'maxReconnectAttempts',
+      'reconnectBaseDelay',
+    ] as const) {
       const value = dto[key];
       if (value === undefined) continue;
       if (value === null) {
         delete config[key];
+      } else if (key === 'autoRejectCallsAllowlist') {
+        // Stored normalized so the reject path never re-parses formatting on a ringing call, and
+        // an empty result clears the key rather than persisting a useless [].
+        const list = normalizeAllowlist(value as string[]);
+        if (list.length > 0) config[key] = list;
+        else delete config[key];
       } else {
         config[key] = value;
       }

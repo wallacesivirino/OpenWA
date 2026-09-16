@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { ToStrictBoolean, ToStrictNumber } from '../../../common/utils/strict-boolean';
 
 /**
@@ -31,6 +31,22 @@ export class UpdateSessionConfigDto {
   @IsOptional()
   @IsBoolean()
   autoRejectCalls?: boolean | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Numbers that are NEVER auto-rejected, even with autoRejectCalls on. Compared digit by ' +
+      'digit, so any format works (`5527999291186`, `+55 27 99929-1186`, or a full `...@c.us`). ' +
+      'An empty array or `null` clears the list, making auto-reject apply to every caller again.',
+    type: [String],
+    example: ['5527999291186'],
+    nullable: true,
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsString({ each: true })
+  @MaxLength(40, { each: true })
+  autoRejectCallsAllowlist?: string[] | null;
 
   @ApiPropertyOptional({
     description:
@@ -82,6 +98,13 @@ export class UpdateSessionConfigDto {
 export class SessionConfigResponseDto {
   @ApiProperty({ description: 'Whether incoming calls are auto-rejected', example: false })
   autoRejectCalls!: boolean;
+
+  @ApiProperty({
+    description: 'Numbers exempt from auto-reject (digits only, as stored)',
+    type: [String],
+    example: ['5527999291186'],
+  })
+  autoRejectCallsAllowlist!: string[];
 
   @ApiProperty({
     description: 'Reconnect attempt cap; `null` means unlimited',

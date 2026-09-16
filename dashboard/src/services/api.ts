@@ -29,6 +29,8 @@ if (API_ORIGIN) warnIfInsecureHttpUrl(API_ORIGIN, 'VITE_API_URL');
  */
 export interface SessionConfig {
   autoRejectCalls: boolean;
+  /** Numbers that ring through even with auto-reject on. Digits only, as the gateway stores them. */
+  autoRejectCallsAllowlist: string[];
   maxReconnectAttempts: number | null;
   reconnectBaseDelay: number;
 }
@@ -809,7 +811,7 @@ export const sessionApi = {
   delete: (id: string) => request<void>(`/sessions/${id}`, { method: 'DELETE' }),
   getConfig: (id: string) => request<SessionConfig>(`/sessions/${id}/config`),
   // PATCH merges: only the keys sent are touched. Send null to clear one back to its default.
-  updateConfig: (id: string, patch: Partial<Record<keyof SessionConfig, boolean | number | null>>) =>
+  updateConfig: (id: string, patch: Partial<Record<keyof SessionConfig, boolean | number | string[] | null>>) =>
     request<SessionConfig>(`/sessions/${id}/config`, {
       method: 'PATCH',
       body: JSON.stringify(patch),

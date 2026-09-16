@@ -361,6 +361,31 @@ export function Sessions() {
     };
   }, [selectedSessionId]);
 
+  // Editor em texto livre (um número por linha): a lista só é enviada ao salvar, não a cada tecla.
+  const [allowlistDraft, setAllowlistDraft] = useState<string | null>(null);
+  const allowlistSaved = (sessionConfig?.autoRejectCallsAllowlist ?? []).join('\n');
+  const allowlistDirty = allowlistDraft !== null && allowlistDraft !== allowlistSaved;
+
+  const handleAllowlistSave = async () => {
+    if (!selectedSessionId || allowlistDraft === null) return;
+    const list = allowlistDraft
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+    setSavingConfig(true);
+    try {
+      const updated = await sessionApi.updateConfig(selectedSessionId, { autoRejectCallsAllowlist: list });
+      setSessionConfig(updated);
+      // Volta ao valor do servidor: ele normaliza para dígitos, então o que o operador digitou
+      // com máscara reaparece limpo — e fica claro que foi isso que ficou salvo.
+      setAllowlistDraft(null);
+    } catch (err) {
+      toast.error(t('sessions.details.autoRejectAllowlist'), err instanceof Error ? err.message : t('common.unknownError'));
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
   const handleAutoRejectToggle = async (next: boolean) => {
     if (!selectedSessionId || !sessionConfig) return;
     const previous = sessionConfig;
@@ -872,6 +897,45 @@ export function Sessions() {
                   </label>
                 </div>
                 <small className="detail-hint">{t('sessions.details.autoRejectCallsHint')}</small>
+
+                {sessionConfig.autoRejectCalls && (
+                  <div className="allowlist-block">
+                    <label className="detail-label" htmlFor="auto-reject-allowlist">
+                      {t('sessions.details.autoRejectAllowlist')}
+                    </label>
+                    <textarea
+                      id="auto-reject-allowlist"
+                      className="allowlist-input"
+                      rows={4}
+                      spellCheck={false}
+                      disabled={!canWrite || savingConfig}
+                      value={allowlistDraft ?? allowlistSaved}
+                      onChange={e => setAllowlistDraft(e.target.value)}
+                      placeholder={t('sessions.details.autoRejectAllowlistPlaceholder')}
+                    />
+                    <small className="detail-hint">{t('sessions.details.autoRejectAllowlistHint')}</small>
+                    {allowlistDirty && (
+                      <div className="allowlist-actions">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          disabled={savingConfig}
+                          onClick={() => void handleAllowlistSave()}
+                        >
+                          {t('common.save')}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          disabled={savingConfig}
+                          onClick={() => setAllowlistDraft(null)}
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

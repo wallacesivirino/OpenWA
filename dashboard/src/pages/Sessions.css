@@ -882,3 +882,28 @@
   font-size: 0.9375rem;
   box-sizing: border-box;
 }
+
+/* Allowlist editor: lives under the auto-reject toggle and only renders when it is on, so it is
+   indented to read as a qualifier of that switch rather than an independent setting. */
+.allowlist-block {
+  margin-top: 14px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border, #2a3441);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.allowlist-input {
+  width: 100%;
+  resize: vertical;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.allowlist-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}

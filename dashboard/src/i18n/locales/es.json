@@ -305,7 +305,10 @@
       "created": "Creado",
       "lastActive": "Última actividad",
       "autoRejectCalls": "Rechazar llamadas automáticamente",
-      "autoRejectCallsHint": "Las llamadas entrantes se rechazan en cuanto suenan. El webhook call.received se envía igualmente antes. Se aplica a la próxima llamada; no hace falta reiniciar."
+      "autoRejectCallsHint": "Las llamadas entrantes se rechazan en cuanto suenan. El webhook call.received se envía igualmente antes. Se aplica a la próxima llamada; no hace falta reiniciar.",
+      "autoRejectAllowlist": "Exceptions (never reject these numbers)",
+      "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
+      "autoRejectAllowlistHint": "One number per line, any format — only digits are compared. Leave empty to reject every call. A caller behind a privacy id (@lid) carries no number and is rejected even if listed."
     },
     "proxy": {
       "title": "Proxy Configuration",

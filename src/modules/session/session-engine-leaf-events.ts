@@ -7,6 +7,7 @@ import { DEFAULT_MEDIA_MAX_BYTES, STATUS_TTL_MS, StatusStoreService } from '../s
 import { buildIncomingStatus } from '../status-store/incoming-status';
 import { GroupEvent, IWhatsAppEngine } from '../../engine/interfaces/whatsapp-engine.interface';
 import { type createLogger } from '../../common/services/logger.service';
+import { isCallerAllowed } from './call-allowlist';
 
 // How many recent status-broadcast messages the connect-time seed pulls (each with its media).
 // Fixed ceiling: the most-recent 50 cover a normal account's 24h of stories; anything posted after
@@ -168,7 +169,8 @@ export class SessionEngineLeafEvents {
   }
 
   /**
-   * Reject a ringing call when the session opted in via `config.autoRejectCalls`. The session row
+   * Reject a ringing call when the session opted in via `config.autoRejectCalls`, unless the
+   * caller is on `config.autoRejectCallsAllowlist`. The session row
    * is re-read here rather than trusting initializeEngine's closure snapshot — a call can arrive
    * long after start, and the row is the only always-current source (mirrors
    * handleEngineDisconnected). `config` is an untyped JSON column: only a strict boolean `true`
@@ -176,7 +178,12 @@ export class SessionEngineLeafEvents {
    * resolveReconnectConfig). Never throws: a reject failure is logged, and the `call.received`
    * dispatch already happened before this ran.
    */
-  async maybeAutoRejectCall(id: string, engine: IWhatsAppEngine, callId: string): Promise<void> {
+  async maybeAutoRejectCall(
+    id: string,
+    engine: IWhatsAppEngine,
+    callId: string,
+    from: string,
+  ): Promise<void> {
     let session: Session | null;
     try {
       session = await this.sessionRepository.findOne({ where: { id } });
@@ -188,6 +195,17 @@ export class SessionEngineLeafEvents {
       return;
     }
     if (session?.config?.autoRejectCalls !== true) {
+      return;
+    }
+    // The allowlist is the exception to the blanket reject: a listed caller rings through. Checked
+    // here rather than at the event so `call.received` still fires for every call either way.
+    if (isCallerAllowed(from, session.config.autoRejectCallsAllowlist)) {
+      this.logger.log('Incoming call allowed through by the auto-reject allowlist', {
+        sessionId: id,
+        callId,
+        from,
+        action: 'call_auto_reject_skipped',
+      });
       return;
     }
     try {
