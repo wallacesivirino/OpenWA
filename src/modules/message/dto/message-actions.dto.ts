@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -12,6 +13,7 @@ import {
   MaxLength,
   IsIn,
   Validate,
+  ValidateNested,
 } from 'class-validator';
 import { ToStrictBoolean, ToStrictNumber } from '../../../common/utils/strict-boolean';
 import {
@@ -94,6 +96,67 @@ export class SendContactDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  quotedMessageId?: string;
+}
+
+export class SendButtonDto {
+  @ApiProperty({ description: 'Identifier echoed back when the recipient taps the button', maxLength: 64 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  id!: string;
+
+  @ApiProperty({ description: 'Button label', maxLength: 20, example: 'Sim' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  text!: string;
+}
+
+export class SendButtonsDto {
+  @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)' })
+  @IsString()
+  @IsNotEmpty()
+  chatId!: string;
+
+  @ApiProperty({ description: 'Body text shown above the buttons', maxLength: 1024 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(1024)
+  text!: string;
+
+  // WhatsApp renders at most 3 quick-reply buttons; more are dropped by the client, so reject
+  // here rather than send something that silently loses options.
+  @ApiProperty({
+    description: 'Quick-reply buttons (WhatsApp renders at most 3)',
+    type: [SendButtonDto],
+    example: [
+      { id: 'yes', text: 'Sim' },
+      { id: 'no', text: 'Nao' },
+    ],
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
+  @ValidateNested({ each: true })
+  @Type(() => SendButtonDto)
+  buttons!: SendButtonDto[];
+
+  @ApiPropertyOptional({ description: 'Title rendered above the body', maxLength: 60 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  title?: string;
+
+  @ApiPropertyOptional({ description: 'Footer line under the body', maxLength: 60 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  footer?: string;
+
+  @ApiPropertyOptional({ description: 'Quote an earlier message, turning this send into a reply' })
+  @IsOptional()
+  @IsString()
   quotedMessageId?: string;
 }
 

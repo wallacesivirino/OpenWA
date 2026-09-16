@@ -364,6 +364,22 @@ export interface PollInput extends Quotable {
   allowMultipleAnswers?: boolean;
 }
 
+/**
+ * Native quick-reply buttons (`interactiveMessage.nativeFlowMessage`). Baileys-only: the
+ * whatsapp-web.js engine has no send path for interactive messages and refuses with
+ * EngineNotSupportedError.
+ */
+export interface ButtonsInput extends Quotable {
+  /** Body text shown above the buttons. */
+  text: string;
+  /** Quick-reply buttons. WhatsApp renders at most 3. */
+  buttons: { id: string; text: string }[];
+  /** Optional title rendered above the body. */
+  title?: string;
+  /** Optional footer line under the body. */
+  footer?: string;
+}
+
 export interface ReactionSender {
   senderId: string;
   emoji: string;
@@ -976,6 +992,12 @@ export interface MessagingCapability {
   sendStickerMessage(chatId: string, media: MediaInput): Promise<MessageResult>;
 
   sendPollMessage(chatId: string, poll: PollInput): Promise<MessageResult>;
+
+  /**
+   * Send native quick-reply buttons. Baileys-only — whatsapp-web.js refuses with
+   * EngineNotSupportedError. See the adapter for why this bypasses `sendMessage`.
+   */
+  sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult>;
 
   /**
    * Reply to a message, quoting it. `mentions` tags participants exactly as on the send routes: the

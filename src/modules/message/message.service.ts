@@ -228,6 +228,20 @@ export class MessageService implements PluginMessagePort {
     return this.sender.sendPoll(sessionId, dto);
   }
 
+  sendButtons(
+    sessionId: string,
+    dto: {
+      chatId: string;
+      text: string;
+      buttons: { id: string; text: string }[];
+      title?: string;
+      footer?: string;
+      quotedMessageId?: string;
+    },
+  ): Promise<MessageResponseDto> {
+    return this.sender.sendButtons(sessionId, dto);
+  }
+
   sendSticker(sessionId: string, dto: SendMediaMessageDto): Promise<MessageResponseDto> {
     return this.sender.sendSticker(sessionId, dto);
   }

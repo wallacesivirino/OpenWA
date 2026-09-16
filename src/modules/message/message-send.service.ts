@@ -451,6 +451,44 @@ export class MessageSendService {
     return this.persistSentState(message, result);
   }
 
+  async sendButtons(
+    sessionId: string,
+    dto: {
+      chatId: string;
+      text: string;
+      buttons: { id: string; text: string }[];
+      title?: string;
+      footer?: string;
+      quotedMessageId?: string;
+    },
+  ): Promise<MessageResponseDto> {
+    const finalDto = await this.applySendingGate(sessionId, 'buttons', dto);
+    const engine = this.getEngine(sessionId);
+
+    // Stored as the body text: that is what a client that cannot render the buttons shows, and it
+    // keeps the history readable the same way the poll path stores its question.
+    const message = await this.saveOutgoingMessage(sessionId, {
+      chatId: finalDto.chatId,
+      body: finalDto.text,
+      type: 'buttons',
+      quotedMessageId: finalDto.quotedMessageId,
+    });
+
+    let result: MessageResult;
+    try {
+      result = await engine.sendButtonsMessage(finalDto.chatId, {
+        text: finalDto.text,
+        buttons: finalDto.buttons,
+        title: finalDto.title,
+        footer: finalDto.footer,
+        quotedMessageId: finalDto.quotedMessageId,
+      });
+    } catch (error) {
+      return this.failSend(sessionId, 'buttons', message, finalDto, error);
+    }
+    return this.persistSentState(message, result);
+  }
+
   async sendSticker(sessionId: string, dto: SendMediaMessageDto): Promise<MessageResponseDto> {
     const finalDto = await this.applySendingGate(sessionId, 'sticker', dto);
     const engine = this.getEngine(sessionId);

@@ -1,10 +1,18 @@
+import { randomBytes } from 'crypto';
 import type * as BaileysLib from '@whiskeysockets/baileys';
-import type { AnyMessageContent, MiscMessageGenerationOptions, WAMessage, WASocket } from '@whiskeysockets/baileys';
+import type {
+  AnyMessageContent,
+  BinaryNode,
+  MiscMessageGenerationOptions,
+  WAMessage,
+  WASocket,
+} from '@whiskeysockets/baileys';
 import { generateSafeLinkPreview } from './safe-link-preview';
 import {
   CallLinkType,
   CustomLinkPreview,
   ChatState,
+  ButtonsInput,
   ContactCard,
   EngineEventCallbacks,
   IncomingMessage,
@@ -63,6 +71,34 @@ export interface BaileysMessagingHost {
 }
 
 /** RIFF….WEBP magic. Sniffed from the bytes, because the declared label may be the DTO's placeholder. */
+
+/**
+ * The `biz` sibling node WhatsApp requires alongside an interactive stanza for it to render.
+ * Shape and constants are empirical — see sendButtonsMessage for why each part matters.
+ */
+function buildBizNode(): BinaryNode {
+  return {
+    tag: 'biz',
+    attrs: {
+      actual_actors: '2',
+      host_storage: '2',
+      privacy_mode_ts: `${(Date.now() / 1000) | 0}`,
+    },
+    content: [
+      {
+        tag: 'interactive',
+        attrs: { type: 'native_flow', v: '1' },
+        content: [{ tag: 'native_flow', attrs: { v: '9', name: 'mixed' } }],
+      },
+      {
+        tag: 'quality_control',
+        attrs: { decision_id: randomBytes(20).toString('hex'), source_type: 'third_party' },
+        content: [{ tag: 'decision_source', attrs: { value: 'df' } }],
+      },
+    ],
+  };
+}
+
 function isWebpBuffer(data: Buffer): boolean {
   return (
     data.length > 12 &&
@@ -460,6 +496,63 @@ export class BaileysMessaging {
       },
       await this.quoteOption(poll.quotedMessageId),
     );
+  }
+
+  /**
+   * Native quick-reply buttons.
+   *
+   * This is the ONE send path that cannot go through `sendContent`/`sock.sendMessage`. Two reasons:
+   *
+   * 1. Baileys 7 dropped the high-level button API — `AnyRegularMessageContent` carries no
+   *    `buttons`/`interactiveButtons` field, so the content generator would silently drop them.
+   * 2. WhatsApp only RENDERS an interactive message when the outgoing stanza carries a sibling
+   *    `biz` binary node. Upstream `sendMessage` injects `additionalNodes` only for
+   *    delete/edit/pin/poll/event (Socket/messages-send.js), never for interactive — so the node
+   *    has to be supplied here and the message relayed by hand.
+   *
+   * The `biz` node's shape is load-bearing and entirely undocumented; these values are empirical
+   * (mirrored from the community fork that reverse-engineered them). Deviating makes the message
+   * deliver but render as "Couldn't load message" on every client:
+   *   - `native_flow` must be name `mixed` / v `9` — NOT the button's own name (`quick_reply`).
+   *   - the `quality_control` child with a random `decision_id` is required, not decorative.
+   *   - the content must NOT be wrapped in `viewOnceMessage`; the wrapper breaks rendering.
+   */
+  async sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult> {
+    this.host.ensureReady();
+    const b = await this.host.loadLib();
+    const jid = await this.toDeliverableJid(chatId);
+
+    const interactiveMessage = {
+      body: { text: input.text },
+      ...(input.footer ? { footer: { text: input.footer } } : {}),
+      header: { ...(input.title ? { title: input.title } : {}), hasMediaAttachment: false },
+      nativeFlowMessage: {
+        buttons: input.buttons.map(btn => ({
+          name: 'quick_reply',
+          buttonParamsJson: JSON.stringify({ display_text: btn.text, id: btn.id }),
+        })),
+      },
+    };
+
+    const generated = b.generateWAMessageFromContent(
+      jid,
+      { interactiveMessage } as Parameters<typeof b.generateWAMessageFromContent>[1],
+      { userJid: this.host.normalizedSelfJid(), ...((await this.quoteOption(input.quotedMessageId)) ?? {}) },
+    );
+
+    await this.sock().relayMessage(jid, generated.message!, {
+      messageId: generated.key.id!,
+      additionalNodes: [buildBizNode()],
+    });
+
+    void this.host.putStoredMessage(generated)?.catch(err =>
+      this.host.logger.warn('Failed to persist sent buttons message to store', {
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+    void this.emitOwnSendEcho(generated);
+
+    return { id: generated.key.id ?? '', timestamp: this.host.toUnixSeconds(generated.messageTimestamp) };
   }
 
   async replyToMessage(chatId: string, quotedMsgId: string, text: string, mentions?: string[]): Promise<MessageResult> {
