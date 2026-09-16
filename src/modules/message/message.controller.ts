@@ -34,6 +34,7 @@ import {
 import {
   SendLocationDto,
   SendContactDto,
+  SendButtonsDto,
   SendPollDto,
   ReplyMessageDto,
   ForwardMessageDto,
@@ -394,6 +395,20 @@ export class MessageController {
   })
   async sendPoll(@Param('sessionId') sessionId: string, @Body() dto: SendPollDto): Promise<MessageResponseDto> {
     return this.messageService.sendPoll(sessionId, dto);
+  }
+
+  @ChatScoped('fenced')
+  @Post('send-buttons')
+  @RequireRole(ApiKeyRole.OPERATOR)
+  @ApiOperation({ summary: 'Send native quick-reply buttons (Baileys engine only)' })
+  @ApiParam({ name: 'sessionId', description: 'Session ID' })
+  @ApiBody({ type: SendButtonsDto })
+  @ApiResponse({ status: 201, description: 'Buttons sent', type: MessageResponseDto })
+  @ApiResponse({ status: 409, description: ENGINE_NOT_READY_409 })
+  @ApiResponse({ status: 400, description: RECIPIENT_UNREACHABLE_400 })
+  @ApiResponse({ status: 501, description: 'Engine does not support interactive messages (whatsapp-web.js)' })
+  async sendButtons(@Param('sessionId') sessionId: string, @Body() dto: SendButtonsDto): Promise<MessageResponseDto> {
+    return this.messageService.sendButtons(sessionId, dto);
   }
 
   @ChatQuotedAllowed()
