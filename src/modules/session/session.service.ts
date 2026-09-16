@@ -48,6 +48,7 @@ import {
   resolveMaxConcurrentSessions,
   resolveReconnectConfig,
 } from './session-engine-lifecycle.service';
+import { normalizeAllowlist } from './call-allowlist';
 import { SessionOwnershipService } from './session-ownership.service';
 import { sessionNotFound } from './session-id.pipe';
 import { paginate, ListOptions, resolveListWindow } from '../../common/utils/paginate';
@@ -599,6 +600,9 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       // Strict `=== true` mirrors maybeAutoRejectCall: a truthy string or 1 left in the opaque blob
       // must not read as opted in here when it would not opt in there.
       autoRejectCalls: config?.autoRejectCalls === true,
+      autoRejectCallsAllowlist: Array.isArray(config?.autoRejectCallsAllowlist)
+        ? normalizeAllowlist(config.autoRejectCallsAllowlist as string[])
+        : [],
       maxReconnectAttempts: Number.isFinite(maxAttempts) ? maxAttempts : null,
       reconnectBaseDelay: baseDelay,
       linkPreview: linkPreviewDefault(config),
@@ -646,11 +650,23 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       const config: Record<string, unknown> =
         typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? { ...parsed } : {};
 
-      for (const key of ['autoRejectCalls', 'maxReconnectAttempts', 'reconnectBaseDelay', 'linkPreview'] as const) {
+      for (const key of [
+        'autoRejectCalls',
+        'autoRejectCallsAllowlist',
+        'maxReconnectAttempts',
+        'reconnectBaseDelay',
+        'linkPreview',
+      ] as const) {
         const value = dto[key];
         if (value === undefined) continue;
         if (value === null) {
           delete config[key];
+        } else if (key === 'autoRejectCallsAllowlist') {
+          // Stored normalized so the reject path never re-parses formatting on a ringing call, and
+          // an empty result clears the key rather than persisting a useless [].
+          const list = normalizeAllowlist(value as string[]);
+          if (list.length > 0) config[key] = list;
+          else delete config[key];
         } else {
           config[key] = value;
         }
