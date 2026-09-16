@@ -15,6 +15,7 @@ import {
 import {
   buildIncomingMessageFromBaileys,
   extractBaileysBody,
+  extractBaileysSelectedId,
   extractBaileysCommerce,
   extractBaileysContext,
   extractBaileysLocation,
@@ -965,6 +966,7 @@ export class BaileysEvents {
         isCatalogShare: isBaileysCatalogShare(normalized),
         ephemeralDuration: context.ephemeralDuration,
         mentionedJids: context.mentionedJids,
+        selectedId: extractBaileysSelectedId(normalized),
         backgroundArgb: context.backgroundArgb,
         font: context.font,
       },

@@ -112,6 +112,15 @@ export interface IncomingMessage {
   author?: string;
   /** WIDs @mentioned in the message (empty/absent when none). Surfaced for command targeting. */
   mentionedIds?: string[];
+  /**
+   * The id the SENDER defined for the interactive element the user picked — a quick-reply button's
+   * `id`, a list row's `id`, or a template button's. Absent on every other message.
+   *
+   * `body` carries the label the user saw, which changes whenever the wording changes; this is the
+   * stable handle to branch on. Covers all four reply shapes (native-flow response, buttons
+   * response, list response, template button reply).
+   */
+  selectedId?: string;
   /** Set for `call` (call_log) messages: video vs voice, and whether an incoming call went unanswered. */
   call?: { video: boolean; missed: boolean };
   /**

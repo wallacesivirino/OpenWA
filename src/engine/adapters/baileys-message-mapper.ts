@@ -47,6 +47,12 @@ export function mapBaileysMessageType(
     case 'templateMessage':
     case 'interactiveResponseMessage':
     case 'listResponseMessage':
+    // A native-flow quick_reply tap comes BACK as the legacy buttonsResponseMessage, not as
+    // interactiveResponseMessage — WhatsApp downgrades the reply shape. Both of these already had
+    // their display text extracted by extractBaileysBody but were never added here, so a button
+    // tap surfaced as `unknown` with a populated body.
+    case 'buttonsResponseMessage':
+    case 'templateButtonReplyMessage':
       // WhatsApp Business interactive shapes (OTP/verification codes, button/template prompts). They
       // carry display text that {@link extractBaileysBody} flattens into `body`, so they surface as
       // `text` instead of being dropped as `unknown` with an empty body (#562).
@@ -88,7 +94,10 @@ export interface BaileysBodyContent {
     hydratedTemplate?: { hydratedContentText?: string | null } | null;
     hydratedFourRowTemplate?: { hydratedContentText?: string | null } | null;
   } | null;
-  interactiveResponseMessage?: { body?: { text?: string | null } | null } | null;
+  interactiveResponseMessage?: {
+    body?: { text?: string | null } | null;
+    nativeFlowResponseMessage?: { paramsJson?: string | null } | null;
+  } | null;
   /** A poll's question; the wire bumps the content key across versions, all carry `name`. */
   pollCreationMessage?: { name?: string | null } | null;
   pollCreationMessageV2?: { name?: string | null } | null;
@@ -96,7 +105,7 @@ export interface BaileysBodyContent {
   /** A shared WhatsApp event; only its display name is surfaced as text. */
   eventMessage?: { name?: string | null } | null;
   /** The user tapping a business message button: which visible label they pressed. */
-  buttonsResponseMessage?: { selectedDisplayText?: string | null } | null;
+  buttonsResponseMessage?: { selectedDisplayText?: string | null; selectedButtonId?: string | null } | null;
   /**
    * Reply to a list/menu. `title` is the picked row's title; the row's own id lives in
    * `singleSelectReply.selectedRowId`, which the neutral IncomingMessage has nowhere to carry —
@@ -106,7 +115,7 @@ export interface BaileysBodyContent {
     title?: string | null;
     singleSelectReply?: { selectedRowId?: string | null } | null;
   } | null;
-  templateButtonReplyMessage?: { selectedDisplayText?: string | null } | null;
+  templateButtonReplyMessage?: { selectedDisplayText?: string | null; selectedId?: string | null } | null;
   /** A single shared contact card. */
   contactMessage?: { vcard?: string | null } | null;
   /** Several contact cards shared together; each carries its own vCard. */
@@ -133,6 +142,35 @@ export interface BaileysBodyContent {
  * message carries no extractable text. Pass the NORMALIZED content (ephemeral/viewOnce/
  * documentWithCaption wrappers already unwrapped), as the adapter does.
  */
+/**
+ * The id the sender defined for the interactive element the user picked, across the four reply
+ * shapes WhatsApp uses. Returns undefined for every non-interactive message.
+ *
+ * `nativeFlowResponseMessage.paramsJson` is how a quick-reply tap comes back: the id is inside a
+ * JSON string, not a proto field, so it is parsed here. Malformed JSON yields undefined rather
+ * than throwing — a junk payload must not break the whole receive path for one field.
+ */
+export function extractBaileysSelectedId(content: BaileysBodyContent): string | undefined {
+  const paramsJson = content.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson;
+  if (paramsJson) {
+    try {
+      const parsed: unknown = JSON.parse(paramsJson);
+      if (parsed && typeof parsed === 'object') {
+        const id = (parsed as { id?: unknown }).id;
+        if (typeof id === 'string' && id.length > 0) return id;
+      }
+    } catch {
+      // fall through to the proto-native shapes below
+    }
+  }
+  return (
+    content.listResponseMessage?.singleSelectReply?.selectedRowId ??
+    content.buttonsResponseMessage?.selectedButtonId ??
+    content.templateButtonReplyMessage?.selectedId ??
+    undefined
+  );
+}
+
 export function extractBaileysBody(content: BaileysBodyContent): string {
   return (
     content.conversation ??
@@ -431,6 +469,8 @@ export interface BaileysIncomingFields {
   ephemeralDuration?: number;
   /** @mentioned engine JIDs from `contextInfo.mentionedJid`; normalized and surfaced as `mentionedIds`. */
   mentionedJids?: string[];
+  /** Id of the interactive element the user picked; see {@link extractBaileysSelectedId}. */
+  selectedId?: string;
   /** Styling of an extended-text (status) message: proto `backgroundArgb` (fixed32 ARGB). */
   backgroundArgb?: number;
   /** Styling of an extended-text (status) message: proto `font` (WhatsApp font index). */
@@ -530,6 +570,12 @@ export function buildIncomingMessageFromBaileys(
   // (message-mapper.ts:90), consumed by command targeting and the `mentions` webhook filter.
   if (fields.mentionedJids && fields.mentionedJids.length > 0) {
     incoming.mentionedIds = fields.mentionedJids.map(normalizeJid);
+  }
+
+  // Id of the interactive element the user picked. `body` has the label they saw; this is the
+  // stable handle, so a bot can branch on it without breaking when the wording changes.
+  if (fields.selectedId) {
+    incoming.selectedId = fields.selectedId;
   }
 
   return incoming;
