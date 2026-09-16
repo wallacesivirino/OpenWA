@@ -943,7 +943,8 @@
       "sticker": "Sticker",
       "poll": "Sondaggio",
       "forward": "Inoltra",
-      "bulk": "Multiplo"
+      "bulk": "Multiplo",
+      "buttons": "Pulsanti"
     },
     "messageContent": "Contenuto del Messaggio",
     "messagePlaceholder": "Inserisci qui il tuo messaggio...",
@@ -1026,7 +1027,16 @@
       "progress": "Inviati {{sent}} di {{total}} · {{failed}} non riusciti · {{pending}} in attesa",
       "cancel": "Annulla batch",
       "cancelling": "Annullamento..."
-    }
+    },
+    "buttonsText": "Message text",
+    "buttonsTextPlaceholder": "How are you?",
+    "buttonsFooter": "Footer (optional)",
+    "buttonsFooterPlaceholder": "via OpenWA",
+    "buttonsList": "Buttons",
+    "buttonLabelPlaceholder": "Label {{index}}",
+    "buttonIdPlaceholder": "id",
+    "addButton": "Add button",
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
   },
   "numberChecker": {
     "subtitle": "Verifica in modo silenzioso se i numeri di telefono hanno un account WhatsApp attivo, senza inviare messaggi",
