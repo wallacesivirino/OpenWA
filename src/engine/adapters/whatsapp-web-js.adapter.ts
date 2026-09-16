@@ -14,6 +14,7 @@ import {
   GroupMemberAddMode,
   GroupMembershipRequest,
   ParticipantOperationResult,
+  ListInput,
   LocationInput,
   PollInput,
   ButtonsInput,
@@ -614,6 +615,10 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
   // messages at all — there is nothing to call. Refused rather than silently downgraded to text.
   sendButtonsMessage(_chatId: string, _input: ButtonsInput): Promise<MessageResult> {
     throw new EngineNotSupportedError('sendButtonsMessage');
+  }
+
+  sendListMessage(_chatId: string, _input: ListInput): Promise<MessageResult> {
+    throw new EngineNotSupportedError('sendListMessage');
   }
 
   replyToMessage(chatId: string, quotedMsgId: string, text: string, mentions?: string[]): Promise<MessageResult> {

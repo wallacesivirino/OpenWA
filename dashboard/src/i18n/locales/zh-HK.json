@@ -653,7 +653,8 @@
       "poll": "投票",
       "forward": "轉發",
       "bulk": "批量",
-      "buttons": "Buttons"
+      "buttons": "Buttons",
+      "list": "Menu"
     },
     "messageContent": "訊息內容",
     "messagePlaceholder": "在此輸入你的訊息...",
@@ -731,7 +732,21 @@
     "buttonLabelPlaceholder": "Label {{index}}",
     "buttonIdPlaceholder": "id",
     "addButton": "Add button",
-    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped.",
+    "listTitle": "Title (optional)",
+    "listTitlePlaceholder": "Support",
+    "listText": "Message text",
+    "listTextPlaceholder": "Pick an option below",
+    "listButtonText": "Button label",
+    "listButtonPlaceholder": "View options",
+    "listSections": "Sections and items",
+    "sectionTitlePlaceholder": "Section {{index}}",
+    "rowTitlePlaceholder": "Item title",
+    "rowDescriptionPlaceholder": "Description (optional)",
+    "addRow": "Add item",
+    "addSection": "Add section",
+    "removeSection": "Remove section",
+    "listHint": "Up to 10 sections, 10 items each. The \"id\" comes back in the webhook when picked."
   },
   "infrastructure": {
     "title": "基礎架構",

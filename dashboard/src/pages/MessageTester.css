@@ -515,3 +515,37 @@
     padding: 0.625rem 0.75rem;
   }
 }
+
+/* List (menu) builder: a section groups its rows, so it needs a visible boundary the flat
+   poll-option-row list never required. The rail on the left is what ties rows to their section. */
+.list-section {
+  border-left: 2px solid var(--border, #2a3441);
+  padding-left: 12px;
+  margin-bottom: 16px;
+}
+
+.list-section .list-row {
+  margin-left: 12px;
+}
+
+/* Row has three inputs (title / description / id) against the section's one; let them share the
+   track instead of squeezing every row to the narrowest. */
+.list-section .list-row input:nth-child(2) {
+  flex: 1.4;
+}
+
+.list-section .list-row input:nth-child(3) {
+  flex: 0.6;
+}
+
+@media (max-width: 640px) {
+  .list-section .list-row {
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  .list-section .list-row input {
+    flex: 1 1 100%;
+  }
+}
+

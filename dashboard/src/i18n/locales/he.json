@@ -662,7 +662,8 @@
       "poll": "סקר",
       "forward": "העברה",
       "bulk": "מרובה",
-      "buttons": "Buttons"
+      "buttons": "Buttons",
+      "list": "Menu"
     },
     "messageContent": "תוכן ההודעה",
     "messagePlaceholder": "יש להזין כאן את ההודעה...",
@@ -740,7 +741,21 @@
     "buttonLabelPlaceholder": "Label {{index}}",
     "buttonIdPlaceholder": "id",
     "addButton": "Add button",
-    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped.",
+    "listTitle": "Title (optional)",
+    "listTitlePlaceholder": "Support",
+    "listText": "Message text",
+    "listTextPlaceholder": "Pick an option below",
+    "listButtonText": "Button label",
+    "listButtonPlaceholder": "View options",
+    "listSections": "Sections and items",
+    "sectionTitlePlaceholder": "Section {{index}}",
+    "rowTitlePlaceholder": "Item title",
+    "rowDescriptionPlaceholder": "Description (optional)",
+    "addRow": "Add item",
+    "addSection": "Add section",
+    "removeSection": "Remove section",
+    "listHint": "Up to 10 sections, 10 items each. The \"id\" comes back in the webhook when picked."
   },
   "infrastructure": {
     "title": "תשתית",

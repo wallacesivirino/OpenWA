@@ -160,6 +160,86 @@ export class SendButtonsDto {
   quotedMessageId?: string;
 }
 
+export class SendListRowDto {
+  @ApiProperty({ description: 'Identifier echoed back when the row is picked', maxLength: 64 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  id!: string;
+
+  @ApiProperty({ description: 'Row title', maxLength: 24 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(24)
+  title!: string;
+
+  @ApiPropertyOptional({ description: 'Secondary line under the title', maxLength: 72 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(72)
+  description?: string;
+}
+
+export class SendListSectionDto {
+  @ApiProperty({ description: 'Section heading', maxLength: 24 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(24)
+  title!: string;
+
+  @ApiProperty({ description: 'Rows in this section', type: [SendListRowDto] })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => SendListRowDto)
+  rows!: SendListRowDto[];
+}
+
+export class SendListDto {
+  @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)' })
+  @IsString()
+  @IsNotEmpty()
+  chatId!: string;
+
+  @ApiProperty({ description: 'Body text of the message', maxLength: 1024 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(1024)
+  text!: string;
+
+  @ApiProperty({ description: 'Label of the button that opens the list', maxLength: 20, example: 'Ver opcoes' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  buttonText!: string;
+
+  @ApiProperty({ description: 'Sections, each with its own rows', type: [SendListSectionDto] })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => SendListSectionDto)
+  sections!: SendListSectionDto[];
+
+  @ApiPropertyOptional({ description: 'Bold title above the body', maxLength: 60 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  title?: string;
+
+  @ApiPropertyOptional({ description: 'Footer line under the body', maxLength: 60 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  footer?: string;
+
+  @ApiPropertyOptional({ description: 'Quote an earlier message, turning this send into a reply' })
+  @IsOptional()
+  @IsString()
+  quotedMessageId?: string;
+}
+
 export class SendPollDto {
   @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)' })
   @IsString()

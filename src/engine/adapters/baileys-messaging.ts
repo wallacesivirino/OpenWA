@@ -16,6 +16,7 @@ import {
   ContactCard,
   EngineEventCallbacks,
   IncomingMessage,
+  ListInput,
   LocationInput,
   MediaInput,
   MessageResult,
@@ -76,7 +77,21 @@ export interface BaileysMessagingHost {
  * The `biz` sibling node WhatsApp requires alongside an interactive stanza for it to render.
  * Shape and constants are empirical — see sendButtonsMessage for why each part matters.
  */
-function buildBizNode(): BinaryNode {
+function buildBizNode(kind: 'interactive' | 'list'): BinaryNode {
+  // Identical in both variants; only the first child differs by message kind.
+  const quality: BinaryNode = {
+    tag: 'quality_control',
+    attrs: { decision_id: randomBytes(20).toString('hex'), source_type: 'third_party' },
+    content: [{ tag: 'decision_source', attrs: { value: 'df' } }],
+  };
+  const descriptor: BinaryNode =
+    kind === 'list'
+      ? { tag: 'list', attrs: { v: '2', type: 'product_list' } }
+      : {
+          tag: 'interactive',
+          attrs: { type: 'native_flow', v: '1' },
+          content: [{ tag: 'native_flow', attrs: { v: '9', name: 'mixed' } }],
+        };
   return {
     tag: 'biz',
     attrs: {
@@ -84,18 +99,7 @@ function buildBizNode(): BinaryNode {
       host_storage: '2',
       privacy_mode_ts: `${(Date.now() / 1000) | 0}`,
     },
-    content: [
-      {
-        tag: 'interactive',
-        attrs: { type: 'native_flow', v: '1' },
-        content: [{ tag: 'native_flow', attrs: { v: '9', name: 'mixed' } }],
-      },
-      {
-        tag: 'quality_control',
-        attrs: { decision_id: randomBytes(20).toString('hex'), source_type: 'third_party' },
-        content: [{ tag: 'decision_source', attrs: { value: 'df' } }],
-      },
-    ],
+    content: [descriptor, quality],
   };
 }
 
@@ -542,11 +546,64 @@ export class BaileysMessaging {
 
     await this.sock().relayMessage(jid, generated.message!, {
       messageId: generated.key.id!,
-      additionalNodes: [buildBizNode()],
+      additionalNodes: [buildBizNode('interactive')],
     });
 
     void this.host.putStoredMessage(generated)?.catch(err =>
       this.host.logger.warn('Failed to persist sent buttons message to store', {
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+    void this.emitOwnSendEcho(generated);
+
+    return { id: generated.key.id ?? '', timestamp: this.host.toUnixSeconds(generated.messageTimestamp) };
+  }
+
+  /**
+   * Send a list / menu.
+   *
+   * Uses the LEGACY `listMessage` proto rather than the `single_select` native flow. That is not a
+   * fallback — it is the only one that renders: sent side by side on 16/09/2026, the native-flow
+   * single_select delivered but showed "Couldn't load message" on every client, while listMessage
+   * rendered the picker. The biz node also differs from the buttons path: a `list` descriptor
+   * (`v=2`, `type=product_list`) replaces the native_flow one.
+   */
+  async sendListMessage(chatId: string, input: ListInput): Promise<MessageResult> {
+    this.host.ensureReady();
+    const b = await this.host.loadLib();
+    const jid = await this.toDeliverableJid(chatId);
+
+    const listMessage = {
+      description: input.text,
+      buttonText: input.buttonText,
+      ...(input.title ? { title: input.title } : {}),
+      ...(input.footer ? { footerText: input.footer } : {}),
+      listType: b.proto.Message.ListMessage.ListType.SINGLE_SELECT,
+      sections: input.sections.map(section => ({
+        title: section.title,
+        // The legacy proto keys the row by `rowId`, not `id` — a row with `id` silently loses its
+        // identity and comes back empty when tapped.
+        rows: section.rows.map(row => ({
+          rowId: row.id,
+          title: row.title,
+          ...(row.description ? { description: row.description } : {}),
+        })),
+      })),
+    };
+
+    const generated = b.generateWAMessageFromContent(
+      jid,
+      { listMessage } as Parameters<typeof b.generateWAMessageFromContent>[1],
+      { userJid: this.host.normalizedSelfJid(), ...((await this.quoteOption(input.quotedMessageId)) ?? {}) },
+    );
+
+    await this.sock().relayMessage(jid, generated.message!, {
+      messageId: generated.key.id!,
+      additionalNodes: [buildBizNode('list')],
+    });
+
+    void this.host.putStoredMessage(generated)?.catch(err =>
+      this.host.logger.warn('Failed to persist sent list message to store', {
         error: err instanceof Error ? err.message : String(err),
       }),
     );

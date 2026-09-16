@@ -380,6 +380,25 @@ export interface ButtonsInput extends Quotable {
   footer?: string;
 }
 
+/**
+ * A WhatsApp list ("menu"): a button that opens a picker of sections/rows. Baileys-only.
+ *
+ * Uses the LEGACY `listMessage` proto, not the `single_select` native flow — verified 16/09/2026:
+ * single_select delivers but no client renders it, while listMessage does.
+ */
+export interface ListInput extends Quotable {
+  /** Body text of the message. */
+  text: string;
+  /** Label of the button that opens the list (e.g. "Ver opções"). */
+  buttonText: string;
+  /** Sections, each with its own rows. */
+  sections: { title: string; rows: { id: string; title: string; description?: string }[] }[];
+  /** Optional bold title above the body. */
+  title?: string;
+  /** Optional footer line. */
+  footer?: string;
+}
+
 export interface ReactionSender {
   senderId: string;
   emoji: string;
@@ -998,6 +1017,11 @@ export interface MessagingCapability {
    * EngineNotSupportedError. See the adapter for why this bypasses `sendMessage`.
    */
   sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult>;
+
+  /**
+   * Send a list / menu. Baileys-only — whatsapp-web.js refuses with EngineNotSupportedError.
+   */
+  sendListMessage(chatId: string, input: ListInput): Promise<MessageResult>;
 
   /**
    * Reply to a message, quoting it. `mentions` tags participants exactly as on the send routes: the

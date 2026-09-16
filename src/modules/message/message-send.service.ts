@@ -489,6 +489,44 @@ export class MessageSendService {
     return this.persistSentState(message, result);
   }
 
+  async sendList(
+    sessionId: string,
+    dto: {
+      chatId: string;
+      text: string;
+      buttonText: string;
+      sections: { title: string; rows: { id: string; title: string; description?: string }[] }[];
+      title?: string;
+      footer?: string;
+      quotedMessageId?: string;
+    },
+  ): Promise<MessageResponseDto> {
+    const finalDto = await this.applySendingGate(sessionId, 'list', dto);
+    const engine = this.getEngine(sessionId);
+
+    const message = await this.saveOutgoingMessage(sessionId, {
+      chatId: finalDto.chatId,
+      body: finalDto.text,
+      type: 'list',
+      quotedMessageId: finalDto.quotedMessageId,
+    });
+
+    let result: MessageResult;
+    try {
+      result = await engine.sendListMessage(finalDto.chatId, {
+        text: finalDto.text,
+        buttonText: finalDto.buttonText,
+        sections: finalDto.sections,
+        title: finalDto.title,
+        footer: finalDto.footer,
+        quotedMessageId: finalDto.quotedMessageId,
+      });
+    } catch (error) {
+      return this.failSend(sessionId, 'list', message, finalDto, error);
+    }
+    return this.persistSentState(message, result);
+  }
+
   async sendSticker(sessionId: string, dto: SendMediaMessageDto): Promise<MessageResponseDto> {
     const finalDto = await this.applySendingGate(sessionId, 'sticker', dto);
     const engine = this.getEngine(sessionId);

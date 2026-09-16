@@ -40,6 +40,7 @@ const messageTypes = [
   'sticker',
   'poll',
   'buttons',
+  'list',
   'forward',
   'bulk',
 ] as const;
@@ -59,6 +60,7 @@ const mediaAccept: Record<(typeof messageTypes)[number], string> = {
   sticker: 'image/*',
   poll: '*/*',
   buttons: '*/*',
+  list: '*/*',
   forward: '*/*',
   bulk: '*/*',
 };
@@ -76,6 +78,7 @@ const fallbackMime: Record<(typeof messageTypes)[number], string> = {
   sticker: 'image/webp',
   poll: 'application/octet-stream',
   buttons: 'application/octet-stream',
+  list: 'application/octet-stream',
   forward: 'application/octet-stream',
   bulk: 'application/octet-stream',
 };
@@ -127,6 +130,13 @@ export function MessageTester() {
   const [locationAddress, setLocationAddress] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [listText, setListText] = useState('');
+  const [listTitle, setListTitle] = useState('');
+  const [listFooter, setListFooter] = useState('');
+  const [listButtonText, setListButtonText] = useState('Ver opcoes');
+  const [sections, setSections] = useState<
+    { title: string; rows: { id: string; title: string; description: string }[] }[]
+  >([{ title: 'Atendimento', rows: [{ id: 'humano', title: 'Falar com atendente', description: '' }] }]);
   const [buttonsText, setButtonsText] = useState('');
   const [buttonsFooter, setButtonsFooter] = useState('');
   // WhatsApp renders at most 3 quick-reply buttons; the backend rejects more.
@@ -277,6 +287,16 @@ export function MessageTester() {
   const isMediaMessageType = mediaMessageTypes.includes(messageType);
   const bulkRecipientList = parseBulkRecipients(bulkRecipients);
   const pollOptionsFilled = pollOptions.map(o => o.trim()).filter(o => o.length > 0);
+  // Empty rows and sections are dropped at send time; a section with no usable row goes with them.
+  const sectionsFilled = sections
+    .map(sec => ({
+      title: sec.title.trim(),
+      rows: sec.rows
+        .map(r => ({ id: r.id.trim(), title: r.title.trim(), description: r.description.trim() }))
+        .filter(r => r.id.length > 0 && r.title.length > 0)
+        .map(r => (r.description ? r : { id: r.id, title: r.title })),
+    }))
+    .filter(sec => sec.title.length > 0 && sec.rows.length > 0);
   const buttonsFilled = buttons
     .map(b => ({ id: b.id.trim(), text: b.text.trim() }))
     .filter(b => b.id.length > 0 && b.text.length > 0);
@@ -295,6 +315,9 @@ export function MessageTester() {
     formValid = !!mediaFile || mediaUrl.trim().length > 0;
   } else if (messageType === 'buttons') {
     formValid = buttonsText.trim().length > 0 && buttonsFilled.length >= 1;
+  } else if (messageType === 'list') {
+    formValid =
+      listText.trim().length > 0 && listButtonText.trim().length > 0 && sectionsFilled.length >= 1;
   } else if (messageType === 'poll') {
     formValid = pollQuestion.trim().length > 0 && pollOptionsFilled.length >= 2;
   } else if (messageType === 'forward') {
@@ -420,6 +443,16 @@ export function MessageTester() {
             text: buttonsText.trim(),
             buttons: buttonsFilled,
             ...(buttonsFooter.trim() ? { footer: buttonsFooter.trim() } : {}),
+          });
+          break;
+        case 'list':
+          result = await messageApi.sendList(session, {
+            chatId,
+            text: listText.trim(),
+            buttonText: listButtonText.trim(),
+            sections: sectionsFilled,
+            ...(listTitle.trim() ? { title: listTitle.trim() } : {}),
+            ...(listFooter.trim() ? { footer: listFooter.trim() } : {}),
           });
           break;
         case 'forward': {
@@ -821,6 +854,171 @@ export function MessageTester() {
                   <Plus size={14} /> {t('messageTester.addButton')}
                 </button>
                 <span className="hint">{t('messageTester.buttonsHint')}</span>
+              </div>
+            </>
+          )}
+
+          {messageType === 'list' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="mt-list-title">{t('messageTester.listTitle')}</label>
+                <input
+                  id="mt-list-title"
+                  type="text"
+                  value={listTitle}
+                  onChange={e => setListTitle(e.target.value)}
+                  placeholder={t('messageTester.listTitlePlaceholder')}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="mt-list-text">{t('messageTester.listText')}</label>
+                <textarea
+                  id="mt-list-text"
+                  value={listText}
+                  onChange={e => setListText(e.target.value)}
+                  placeholder={t('messageTester.listTextPlaceholder')}
+                  rows={2}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="mt-list-btn">{t('messageTester.listButtonText')}</label>
+                <input
+                  id="mt-list-btn"
+                  type="text"
+                  value={listButtonText}
+                  maxLength={20}
+                  onChange={e => setListButtonText(e.target.value)}
+                  placeholder={t('messageTester.listButtonPlaceholder')}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="mt-list-footer">{t('messageTester.buttonsFooter')}</label>
+                <input
+                  id="mt-list-footer"
+                  type="text"
+                  value={listFooter}
+                  onChange={e => setListFooter(e.target.value)}
+                  placeholder={t('messageTester.buttonsFooterPlaceholder')}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>{t('messageTester.listSections')}</label>
+                {sections.map((sec, si) => (
+                  <div className="list-section" key={si}>
+                    <div className="poll-option-row">
+                      <input
+                        type="text"
+                        value={sec.title}
+                        maxLength={24}
+                        onChange={e =>
+                          setSections(prev => prev.map((x, i) => (i === si ? { ...x, title: e.target.value } : x)))
+                        }
+                        placeholder={t('messageTester.sectionTitlePlaceholder', { index: si + 1 })}
+                      />
+                      <button
+                        type="button"
+                        className="remove-option-btn"
+                        onClick={() => setSections(prev => prev.filter((_, i) => i !== si))}
+                        disabled={sections.length <= 1}
+                        aria-label={t('messageTester.removeSection')}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    {sec.rows.map((row, ri) => (
+                      <div className="poll-option-row list-row" key={ri}>
+                        <input
+                          type="text"
+                          value={row.title}
+                          maxLength={24}
+                          onChange={e =>
+                            setSections(prev =>
+                              prev.map((x, i) =>
+                                i === si
+                                  ? { ...x, rows: x.rows.map((r, j) => (j === ri ? { ...r, title: e.target.value } : r)) }
+                                  : x,
+                              ),
+                            )
+                          }
+                          placeholder={t('messageTester.rowTitlePlaceholder')}
+                        />
+                        <input
+                          type="text"
+                          value={row.description}
+                          maxLength={72}
+                          onChange={e =>
+                            setSections(prev =>
+                              prev.map((x, i) =>
+                                i === si
+                                  ? {
+                                      ...x,
+                                      rows: x.rows.map((r, j) => (j === ri ? { ...r, description: e.target.value } : r)),
+                                    }
+                                  : x,
+                              ),
+                            )
+                          }
+                          placeholder={t('messageTester.rowDescriptionPlaceholder')}
+                        />
+                        <input
+                          type="text"
+                          value={row.id}
+                          maxLength={64}
+                          onChange={e =>
+                            setSections(prev =>
+                              prev.map((x, i) =>
+                                i === si
+                                  ? { ...x, rows: x.rows.map((r, j) => (j === ri ? { ...r, id: e.target.value } : r)) }
+                                  : x,
+                              ),
+                            )
+                          }
+                          placeholder={t('messageTester.buttonIdPlaceholder')}
+                        />
+                        <button
+                          type="button"
+                          className="remove-option-btn"
+                          onClick={() =>
+                            setSections(prev =>
+                              prev.map((x, i) => (i === si ? { ...x, rows: x.rows.filter((_, j) => j !== ri) } : x)),
+                            )
+                          }
+                          disabled={sec.rows.length <= 1}
+                          aria-label={t('messageTester.removeOption')}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      className="add-option-btn"
+                      onClick={() =>
+                        setSections(prev =>
+                          prev.map((x, i) =>
+                            i === si ? { ...x, rows: [...x.rows, { id: '', title: '', description: '' }] } : x,
+                          ),
+                        )
+                      }
+                      disabled={sec.rows.length >= 10}
+                    >
+                      <Plus size={14} /> {t('messageTester.addRow')}
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="add-option-btn"
+                  onClick={() => setSections(prev => [...prev, { title: '', rows: [{ id: '', title: '', description: '' }] }])}
+                  disabled={sections.length >= 10}
+                >
+                  <Plus size={14} /> {t('messageTester.addSection')}
+                </button>
+                <span className="hint">{t('messageTester.listHint')}</span>
               </div>
             </>
           )}

@@ -35,6 +35,7 @@ import {
   SendLocationDto,
   SendContactDto,
   SendButtonsDto,
+  SendListDto,
   SendPollDto,
   ReplyMessageDto,
   ForwardMessageDto,
@@ -355,6 +356,19 @@ export class MessageController {
   @ApiResponse({ status: 501, description: 'Engine does not support interactive messages (whatsapp-web.js)' })
   async sendButtons(@Param('sessionId') sessionId: string, @Body() dto: SendButtonsDto): Promise<MessageResponseDto> {
     return this.messageService.sendButtons(sessionId, dto);
+  }
+
+  @Post('send-list')
+  @RequireRole(ApiKeyRole.OPERATOR)
+  @ApiOperation({ summary: 'Send a list / menu (Baileys engine only)' })
+  @ApiParam({ name: 'sessionId', description: 'Session ID' })
+  @ApiBody({ type: SendListDto })
+  @ApiResponse({ status: 201, description: 'List sent', type: MessageResponseDto })
+  @ApiResponse({ status: 409, description: ENGINE_NOT_READY_409 })
+  @ApiResponse({ status: 400, description: RECIPIENT_UNREACHABLE_400 })
+  @ApiResponse({ status: 501, description: 'Engine does not support list messages (whatsapp-web.js)' })
+  async sendList(@Param('sessionId') sessionId: string, @Body() dto: SendListDto): Promise<MessageResponseDto> {
+    return this.messageService.sendList(sessionId, dto);
   }
 
   @Post('reply')

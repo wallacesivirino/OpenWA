@@ -604,7 +604,8 @@
       "poll": "Enquete",
       "forward": "Encaminhar",
       "bulk": "Em massa",
-      "buttons": "Botões"
+      "buttons": "Botões",
+      "list": "Menu"
     },
     "messageContent": "Conteúdo da mensagem",
     "messagePlaceholder": "Digite sua mensagem aqui...",
@@ -682,7 +683,21 @@
     "buttonLabelPlaceholder": "Rótulo {{index}}",
     "buttonIdPlaceholder": "id",
     "addButton": "Adicionar botão",
-    "buttonsHint": "Até 3 botões. O \"id\" volta no webhook quando a pessoa toca."
+    "buttonsHint": "Até 3 botões. O \"id\" volta no webhook quando a pessoa toca.",
+    "listTitle": "Título (opcional)",
+    "listTitlePlaceholder": "Atendimento",
+    "listText": "Texto da mensagem",
+    "listTextPlaceholder": "Escolha uma opção abaixo",
+    "listButtonText": "Rótulo do botão",
+    "listButtonPlaceholder": "Ver opções",
+    "listSections": "Seções e itens",
+    "sectionTitlePlaceholder": "Seção {{index}}",
+    "rowTitlePlaceholder": "Título do item",
+    "rowDescriptionPlaceholder": "Descrição (opcional)",
+    "addRow": "Adicionar item",
+    "addSection": "Adicionar seção",
+    "removeSection": "Remover seção",
+    "listHint": "Até 10 seções, 10 itens cada. O \"id\" volta no webhook quando o item é escolhido."
   },
   "templates": {
     "title": "Modelos",

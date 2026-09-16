@@ -33,6 +33,7 @@ import {
   CustomLinkPreview,
   GroupJoinInfo,
   LabelInput,
+  ListInput,
   LocationInput,
   MediaInput,
   MessageReaction,
@@ -323,6 +324,10 @@ export class BaileysAdapter implements IWhatsAppEngine {
 
   async sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult> {
     return this.messaging.sendButtonsMessage(chatId, input);
+  }
+
+  async sendListMessage(chatId: string, input: ListInput): Promise<MessageResult> {
+    return this.messaging.sendListMessage(chatId, input);
   }
 
   async replyToMessage(chatId: string, quotedMsgId: string, text: string, mentions?: string[]): Promise<MessageResult> {
