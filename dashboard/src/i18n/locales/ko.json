@@ -938,7 +938,8 @@
       "poll": "투표",
       "forward": "전달",
       "bulk": "대량",
-      "buttons": "Buttons"
+      "buttons": "Buttons",
+      "list": "Menu"
     },
     "messageContent": "메시지 내용",
     "messagePlaceholder": "메시지를 입력하세요...",
@@ -1030,7 +1031,21 @@
     "buttonLabelPlaceholder": "Label {{index}}",
     "buttonIdPlaceholder": "id",
     "addButton": "Add button",
-    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped."
+    "buttonsHint": "Up to 3 buttons. The \"id\" comes back in the webhook when tapped.",
+    "listTitle": "Title (optional)",
+    "listTitlePlaceholder": "Support",
+    "listText": "Message text",
+    "listTextPlaceholder": "Pick an option below",
+    "listButtonText": "Button label",
+    "listButtonPlaceholder": "View options",
+    "listSections": "Sections and items",
+    "sectionTitlePlaceholder": "Section {{index}}",
+    "rowTitlePlaceholder": "Item title",
+    "rowDescriptionPlaceholder": "Description (optional)",
+    "addRow": "Add item",
+    "addSection": "Add section",
+    "removeSection": "Remove section",
+    "listHint": "Up to 10 sections, 10 items each. The \"id\" comes back in the webhook when picked."
   },
   "numberChecker": {
     "subtitle": "메시지를 보내지 않고 전화번호에 활성 WhatsApp 계정이 있는지 조용히 확인하세요",

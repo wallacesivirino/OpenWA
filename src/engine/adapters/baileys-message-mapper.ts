@@ -155,9 +155,16 @@ export interface BaileysBodyContent {
   eventMessage?: { name?: string | null } | null;
   /** The user tapping a business message button: which visible label they pressed. */
   buttonsResponseMessage?: { selectedDisplayText?: string | null } | null;
+  /**
+   * Reply to a list/menu. `title` is the picked row's title; the row's own id lives in
+   * `singleSelectReply.selectedRowId`, which the neutral IncomingMessage has nowhere to carry —
+   * same as the button id in buttonsResponseMessage. Body keeps the display text, per convention.
+   */
+  listResponseMessage?: {
+    title?: string | null;
+    singleSelectReply?: { selectedRowId?: string | null } | null;
+  } | null;
   templateButtonReplyMessage?: { selectedDisplayText?: string | null } | null;
-  /** The user picking a row from a business list message. */
-  listResponseMessage?: { title?: string | null } | null;
   /** A single shared contact card. */
   contactMessage?: { vcard?: string | null } | null;
   /** Several contact cards shared together; each carries its own vCard. */
