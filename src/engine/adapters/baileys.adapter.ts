@@ -21,6 +21,7 @@ import {
   ChannelMessage,
   Catalog,
   Contact,
+  ButtonsInput,
   ContactCard,
   EngineEventCallbacks,
   EngineStatus,
@@ -365,6 +366,10 @@ export class BaileysAdapter implements IWhatsAppEngine {
 
   async sendPollMessage(chatId: string, poll: PollInput): Promise<MessageResult> {
     return this.messaging.sendPollMessage(chatId, poll);
+  }
+
+  async sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult> {
+    return this.messaging.sendButtonsMessage(chatId, input);
   }
 
   async replyToMessage(chatId: string, quotedMsgId: string, text: string, mentions?: string[]): Promise<MessageResult> {
