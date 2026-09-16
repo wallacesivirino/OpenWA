@@ -480,6 +480,15 @@ export interface SendButtonsPayload {
   footer?: string;
 }
 
+export interface SendListPayload {
+  chatId: string;
+  text: string;
+  buttonText: string;
+  sections: { title: string; rows: { id: string; title: string; description?: string }[] }[];
+  title?: string;
+  footer?: string;
+}
+
 export interface ForwardMessagePayload {
   fromChatId: string;
   toChatId: string;
@@ -1130,6 +1139,11 @@ export const messageApi = {
     }),
   sendButtons: (sessionId: string, data: SendButtonsPayload) =>
     request<MessageResponse>(`/sessions/${sessionId}/messages/send-buttons`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  sendList: (sessionId: string, data: SendListPayload) =>
+    request<MessageResponse>(`/sessions/${sessionId}/messages/send-list`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
