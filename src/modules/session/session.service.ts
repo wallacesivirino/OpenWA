@@ -49,6 +49,7 @@ import {
   resolveReconnectConfig,
 } from './session-engine-lifecycle.service';
 import { normalizeAllowlist } from './call-allowlist';
+import { normalizeRejectMessage } from './call-reject-reply';
 import { SessionOwnershipService } from './session-ownership.service';
 import { sessionNotFound } from './session-id.pipe';
 import { paginate, ListOptions, resolveListWindow } from '../../common/utils/paginate';
@@ -603,6 +604,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       autoRejectCallsAllowlist: Array.isArray(config?.autoRejectCallsAllowlist)
         ? normalizeAllowlist(config.autoRejectCallsAllowlist as string[])
         : [],
+      autoRejectCallsMessage: normalizeRejectMessage(config?.autoRejectCallsMessage),
       maxReconnectAttempts: Number.isFinite(maxAttempts) ? maxAttempts : null,
       reconnectBaseDelay: baseDelay,
       linkPreview: linkPreviewDefault(config),
@@ -653,6 +655,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       for (const key of [
         'autoRejectCalls',
         'autoRejectCallsAllowlist',
+        'autoRejectCallsMessage',
         'maxReconnectAttempts',
         'reconnectBaseDelay',
         'linkPreview',
@@ -661,6 +664,11 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
         if (value === undefined) continue;
         if (value === null) {
           delete config[key];
+        } else if (key === 'autoRejectCallsMessage') {
+          // A blank message means "send nothing": clear the key rather than store whitespace.
+          const text = normalizeRejectMessage(value);
+          if (text) config[key] = text;
+          else delete config[key];
         } else if (key === 'autoRejectCallsAllowlist') {
           // Stored normalized so the reject path never re-parses formatting on a ringing call, and
           // an empty result clears the key rather than persisting a useless [].
