@@ -51,6 +51,20 @@ export class UpdateSessionConfigDto {
 
   @ApiPropertyOptional({
     description:
+      'Text sent to the caller right after an auto-rejected call (e.g. "This number does not take ' +
+      'WhatsApp calls, please call the regular line"). Sent at most once per caller every 10 ' +
+      'minutes, so a caller who keeps redialling is not flooded. Empty string or `null` disables it.',
+    example: 'Este número não aceita ligações pelo WhatsApp. Por favor, ligue normalmente.',
+    nullable: true,
+    maxLength: 1000,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  autoRejectCallsMessage?: string | null;
+
+  @ApiPropertyOptional({
+    description:
       'Cap on consecutive reconnect attempts (`0` disables reconnect entirely). Send `null` for ' +
       'unlimited, which is the default. Applies on the next session start, not to a reconnect ' +
       "sequence already in flight. Bounds the gateway's own reconnect, which is every reconnect on " +
@@ -109,6 +123,14 @@ export class SessionConfigResponseDto {
     example: ['5527999291186'],
   })
   autoRejectCallsAllowlist!: string[];
+
+  @ApiProperty({
+    description: 'Text sent to a caller after an auto-rejected call; `null` when disabled',
+    example: 'Este número não aceita ligações pelo WhatsApp. Por favor, ligue normalmente.',
+    nullable: true,
+    type: String,
+  })
+  autoRejectCallsMessage!: string | null;
 
   @ApiProperty({
     description:
