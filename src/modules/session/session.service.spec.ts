@@ -94,6 +94,7 @@ import { AuditService } from '../audit/audit.service';
 import { SessionController } from './session.controller';
 import { ChatScopeService } from '../auth/chat-scope.service';
 import type { ApiKey } from '../auth/entities/api-key.entity';
+import { resetRejectReplyCooldown } from './call-reject-reply';
 
 /** The (action, context) pair of one audit call, typed so assertions do not fall back to `any`. */
 const auditCall = (mock: jest.Mock, index = 0): [string, { sessionId?: string; metadata?: Record<string, unknown> }] =>
@@ -10150,6 +10151,85 @@ describe('SessionService', () => {
       }
     });
 
+    describe('message to the rejected caller (autoRejectCallsMessage)', () => {
+      const MSG = 'Este número não aceita ligações pelo WhatsApp. Ligue normalmente.';
+      let sendText: jest.Mock;
+
+      beforeEach(() => {
+        resetRejectReplyCooldown();
+        sendText = jest.fn().mockResolvedValue({ id: 'MSG1', timestamp: 1700000901 });
+        (mockEngine as unknown as { sendTextMessage: jest.Mock }).sendTextMessage = sendText;
+      });
+
+      it('tells the caller why, right after rejecting', async () => {
+        const onCall = await startAndCaptureCallCallback({ autoRejectCalls: true, autoRejectCallsMessage: MSG });
+
+        onCall(callEvent());
+        await flush();
+
+        expect(mockEngine.rejectCall).toHaveBeenCalledWith('CALL1');
+        expect(sendText).toHaveBeenCalledWith('628111@c.us', MSG, undefined, { linkPreview: false });
+      });
+
+      // The failure this guards against: a caller who keeps redialling getting the text every time.
+      it('does not repeat the message when the same caller redials', async () => {
+        const onCall = await startAndCaptureCallCallback({ autoRejectCalls: true, autoRejectCallsMessage: MSG });
+
+        onCall(callEvent({ callId: 'CALL1' }));
+        await flush();
+        onCall(callEvent({ callId: 'CALL2' }));
+        await flush();
+
+        expect(mockEngine.rejectCall).toHaveBeenCalledTimes(2);
+        expect(sendText).toHaveBeenCalledTimes(1);
+      });
+
+      it('sends nothing when no message is configured', async () => {
+        const onCall = await startAndCaptureCallCallback({ autoRejectCalls: true });
+
+        onCall(callEvent());
+        await flush();
+
+        expect(mockEngine.rejectCall).toHaveBeenCalledWith('CALL1');
+        expect(sendText).not.toHaveBeenCalled();
+      });
+
+      it('sends nothing to an allowlisted caller, whose call is not rejected', async () => {
+        const onCall = await startAndCaptureCallCallback({
+          autoRejectCalls: true,
+          autoRejectCallsAllowlist: ['628111'],
+          autoRejectCallsMessage: MSG,
+        });
+
+        onCall(callEvent());
+        await flush();
+
+        expect(mockEngine.rejectCall).not.toHaveBeenCalled();
+        expect(sendText).not.toHaveBeenCalled();
+      });
+
+      it('sends nothing when the rejection itself failed', async () => {
+        const onCall = await startAndCaptureCallCallback({ autoRejectCalls: true, autoRejectCallsMessage: MSG });
+        mockEngine.rejectCall.mockRejectedValue(new Error('call already ended'));
+
+        onCall(callEvent());
+        await flush();
+
+        expect(sendText).not.toHaveBeenCalled();
+      });
+
+      it('survives a failed send without an unhandled rejection', async () => {
+        const onCall = await startAndCaptureCallCallback({ autoRejectCalls: true, autoRejectCallsMessage: MSG });
+        sendText.mockRejectedValue(new Error('not on WhatsApp'));
+
+        onCall(callEvent());
+        await flush();
+
+        expect(sendText).toHaveBeenCalledTimes(1);
+        expect(webhookService.dispatch).toHaveBeenCalledWith('sess-uuid-1', 'call.received', expect.anything());
+      });
+    });
+
     it('drops the event when it arrives from a stale (superseded) engine', async () => {
       const onCall = await startAndCaptureCallCallback({ autoRejectCalls: true });
       // A newer engine now owns the id (restart/reconnect window): the captured callback is stale.
@@ -11777,9 +11857,29 @@ describe('SessionService', () => {
       // to serialise as null, not as the cap.
       await expect(service.getConfig('sess-uuid-1')).resolves.toEqual({
         autoRejectCalls: false,
+        autoRejectCallsAllowlist: [],
+        autoRejectCallsMessage: null,
         maxReconnectAttempts: null,
         reconnectBaseDelay: 5000,
       });
+    });
+
+    it('stores the rejected-call message trimmed, and clears it when blank', async () => {
+      (repository.findOne as jest.Mock).mockResolvedValue(createMockSession({ config: { autoRejectCalls: true } }));
+
+      await expect(
+        service.updateConfig('sess-uuid-1', { autoRejectCallsMessage: '  Ligue normalmente.  ' }),
+      ).resolves.toMatchObject({ autoRejectCallsMessage: 'Ligue normalmente.' });
+      expect(writtenConfig()).toEqual({ autoRejectCalls: true, autoRejectCallsMessage: 'Ligue normalmente.' });
+
+      (repository.update as jest.Mock).mockClear(); // writtenConfig() reads the first write
+      (repository.findOne as jest.Mock).mockResolvedValue(
+        createMockSession({ config: { autoRejectCalls: true, autoRejectCallsMessage: 'Ligue normalmente.' } }),
+      );
+      await expect(service.updateConfig('sess-uuid-1', { autoRejectCallsMessage: '   ' })).resolves.toMatchObject({
+        autoRejectCallsMessage: null,
+      });
+      expect(writtenConfig()).toEqual({ autoRejectCalls: true });
     });
 
     it('merges into the opaque column, leaving keys it does not own untouched', async () => {
@@ -11834,6 +11934,8 @@ describe('SessionService', () => {
       // the authority at use time, and this must agree with it rather than echo the stored value.
       await expect(service.getConfig('sess-uuid-1')).resolves.toEqual({
         autoRejectCalls: false,
+        autoRejectCallsAllowlist: [],
+        autoRejectCallsMessage: null,
         maxReconnectAttempts: 20,
         reconnectBaseDelay: 1000,
       });

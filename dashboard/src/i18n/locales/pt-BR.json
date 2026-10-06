@@ -496,7 +496,10 @@
       "autoRejectCallsHint": "As chamadas recebidas são recusadas assim que tocam. O webhook call.received continua sendo enviado antes. Vale a partir da próxima chamada, sem reiniciar. Somente no mecanismo Baileys: o whatsapp-web.js não consegue recusar chamadas.",
       "autoRejectAllowlist": "Exceções (não rejeitar destes números)",
       "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
-      "autoRejectAllowlistHint": "Um número por linha, em qualquer formato — só os dígitos são comparados. Deixe vazio para rejeitar todas. Quem liga com id de privacidade (@lid) não tem número e será rejeitado mesmo estando na lista."
+      "autoRejectAllowlistHint": "Um número por linha, em qualquer formato — só os dígitos são comparados. Deixe vazio para rejeitar todas. Quem liga com id de privacidade (@lid) não tem número e será rejeitado mesmo estando na lista.",
+      "autoRejectMessage": "Mensagem para quem tiver a chamada rejeitada",
+      "autoRejectMessagePlaceholder": "Este número não aceita ligações pelo WhatsApp. Por favor, ligue normalmente.",
+      "autoRejectMessageHint": "Enviada logo depois da recusa, no máximo uma vez a cada 10 minutos para o mesmo número. Deixe vazio para não enviar nada."
     },
     "proxy": {
       "title": "Configuração de proxy",

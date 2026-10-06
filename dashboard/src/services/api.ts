@@ -33,6 +33,8 @@ export interface SessionConfig {
   autoRejectCalls: boolean;
   /** Numbers that ring through even with auto-reject on. Digits only, as the gateway stores them. */
   autoRejectCallsAllowlist: string[];
+  /** Text sent to a caller right after an auto-rejected call; null when disabled. */
+  autoRejectCallsMessage: string | null;
   maxReconnectAttempts: number | null;
   reconnectBaseDelay: number;
 }
@@ -931,7 +933,10 @@ export const sessionApi = {
   delete: (id: string) => request<void>(`/sessions/${id}`, { method: 'DELETE' }),
   getConfig: (id: string) => request<SessionConfig>(`/sessions/${id}/config`),
   // PATCH merges: only the keys sent are touched. Send null to clear one back to its default.
-  updateConfig: (id: string, patch: Partial<Record<keyof SessionConfig, boolean | number | string[] | null>>) =>
+  updateConfig: (
+    id: string,
+    patch: Partial<Record<keyof SessionConfig, boolean | number | string | string[] | null>>,
+  ) =>
     request<SessionConfig>(`/sessions/${id}/config`, {
       method: 'PATCH',
       body: JSON.stringify(patch),

@@ -491,7 +491,10 @@
       "autoRejectCallsHint": "ఇన్‌కమింగ్ కాల్‌లు మోగిన వెంటనే తిరస్కరించబడతాయి. call.received వెబ్‌హుక్ మాత్రం ముందుగా పంపబడుతుంది. తదుపరి కాల్ నుండి వర్తిస్తుంది, పునఃప్రారంభం అవసరం లేదు. Baileys ఇంజిన్‌లో మాత్రమే: whatsapp-web.js తో కాల్‌లను తిరస్కరించడం సాధ్యం కాదు.",
       "autoRejectAllowlist": "Exceptions (never reject these numbers)",
       "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
-      "autoRejectAllowlistHint": "One number per line, any format — only digits are compared. Leave empty to reject every call. A caller behind a privacy id (@lid) carries no number and is rejected even if listed."
+      "autoRejectAllowlistHint": "One number per line, any format — only digits are compared. Leave empty to reject every call. A caller behind a privacy id (@lid) carries no number and is rejected even if listed.",
+      "autoRejectMessage": "Message to callers whose call was rejected",
+      "autoRejectMessagePlaceholder": "This number does not take WhatsApp calls. Please call the regular line.",
+      "autoRejectMessageHint": "Sent right after the rejection, at most once every 10 minutes to the same caller. Leave empty to send nothing."
     },
     "proxy": {
       "title": "ప్రాక్సీ కాన్ఫిగరేషన్",

@@ -517,7 +517,35 @@ export function Sessions() {
       // com máscara reaparece limpo — e fica claro que foi isso que ficou salvo.
       setAllowlistDraft(null);
     } catch (err) {
-      toast.error(t('sessions.details.autoRejectAllowlist'), err instanceof Error ? err.message : t('common.unknownError'));
+      toast.error(
+        t('sessions.details.autoRejectAllowlist'),
+        err instanceof Error ? err.message : t('common.unknownError'),
+      );
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  // Mensagem para quem teve a chamada rejeitada. O rascunho guarda de qual sessão é, para não
+  // "vazar" para outra sessão se o operador trocar de sessão sem salvar.
+  const [messageDraft, setMessageDraft] = useState<{ sid: string; text: string } | null>(null);
+  const messageSaved = sessionConfig?.autoRejectCallsMessage ?? '';
+  const messageValue = messageDraft && messageDraft.sid === selectedSessionId ? messageDraft.text : messageSaved;
+  const messageDirty = messageValue !== messageSaved;
+
+  const handleMessageSave = async () => {
+    if (!selectedSessionId) return;
+    setSavingConfig(true);
+    try {
+      const text = messageValue.trim();
+      const updated = await sessionApi.updateConfig(selectedSessionId, { autoRejectCallsMessage: text || null });
+      setSessionConfig(updated);
+      setMessageDraft(null);
+    } catch (err) {
+      toast.error(
+        t('sessions.details.autoRejectMessage'),
+        err instanceof Error ? err.message : t('common.unknownError'),
+      );
     } finally {
       setSavingConfig(false);
     }
@@ -1115,6 +1143,47 @@ export function Sessions() {
                           className="btn btn-sm"
                           disabled={savingConfig}
                           onClick={() => setAllowlistDraft(null)}
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {sessionConfig.autoRejectCalls && (
+                  <div className="allowlist-block">
+                    <label className="detail-label" htmlFor="auto-reject-message">
+                      {t('sessions.details.autoRejectMessage')}
+                    </label>
+                    <textarea
+                      id="auto-reject-message"
+                      className="allowlist-input"
+                      rows={3}
+                      maxLength={1000}
+                      disabled={!canWrite || savingConfig}
+                      value={messageValue}
+                      onChange={e =>
+                        selectedSessionId && setMessageDraft({ sid: selectedSessionId, text: e.target.value })
+                      }
+                      placeholder={t('sessions.details.autoRejectMessagePlaceholder')}
+                    />
+                    <small className="detail-hint">{t('sessions.details.autoRejectMessageHint')}</small>
+                    {messageDirty && (
+                      <div className="allowlist-actions">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          disabled={savingConfig}
+                          onClick={() => void handleMessageSave()}
+                        >
+                          {t('common.save')}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          disabled={savingConfig}
+                          onClick={() => setMessageDraft(null)}
                         >
                           {t('common.cancel')}
                         </button>

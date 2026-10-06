@@ -8,6 +8,7 @@ import { buildIncomingStatus } from '../status-store/incoming-status';
 import { GroupEvent, IWhatsAppEngine } from '../../engine/interfaces/whatsapp-engine.interface';
 import { type createLogger } from '../../common/services/logger.service';
 import { isCallerAllowed } from './call-allowlist';
+import { normalizeRejectMessage, shouldReplyToRejectedCaller } from './call-reject-reply';
 
 // How many recent status-broadcast messages the connect-time seed pulls (each with its media).
 // Fixed ceiling: the most-recent 50 cover a normal account's 24h of stories; anything posted after
@@ -184,12 +185,7 @@ export class SessionEngineLeafEvents {
    * resolveReconnectConfig). Never throws: a reject failure is logged, and the `call.received`
    * dispatch already happened before this ran.
    */
-  async maybeAutoRejectCall(
-    id: string,
-    engine: IWhatsAppEngine,
-    callId: string,
-    from: string,
-  ): Promise<void> {
+  async maybeAutoRejectCall(id: string, engine: IWhatsAppEngine, callId: string, from: string): Promise<void> {
     let session: Session | null;
     try {
       session = await this.sessionRepository.findOne({ where: { id } });
@@ -227,6 +223,46 @@ export class SessionEngineLeafEvents {
         callId,
         error: err instanceof Error ? err.message : String(err),
         action: 'call_auto_reject_failed',
+      });
+      return;
+    }
+    await this.replyToRejectedCaller(id, engine, callId, from, session.config.autoRejectCallsMessage);
+  }
+
+  /**
+   * Tell the rejected caller why (`config.autoRejectCallsMessage`), at most once per caller per
+   * cooldown window. Best effort: a send failure is logged and never surfaces — the call is
+   * already rejected either way.
+   */
+  private async replyToRejectedCaller(
+    id: string,
+    engine: IWhatsAppEngine,
+    callId: string,
+    from: string,
+    configured: unknown,
+  ): Promise<void> {
+    const text = normalizeRejectMessage(configured);
+    if (!text || !from) return;
+    if (!shouldReplyToRejectedCaller(id, from)) {
+      this.logger.log('Skipped the rejected-call message (caller already told recently)', {
+        sessionId: id,
+        callId,
+        action: 'call_reject_reply_skipped',
+      });
+      return;
+    }
+    try {
+      await engine.sendTextMessage(from, text, undefined, { linkPreview: false });
+      this.logger.log('Sent the rejected-call message to the caller', {
+        sessionId: id,
+        callId,
+        action: 'call_reject_reply_sent',
+      });
+    } catch (err) {
+      this.logger.warn('Failed to send the rejected-call message', {
+        sessionId: id,
+        callId,
+        error: err instanceof Error ? err.message : String(err),
       });
     }
   }
