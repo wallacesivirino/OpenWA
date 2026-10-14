@@ -112,6 +112,15 @@ export class SendButtonDto {
   @IsNotEmpty()
   @MaxLength(20)
   text!: string;
+
+  // With copyCode the button becomes a native "copy" button (cta_copy): tapping it copies this
+  // text (e.g. a Pix key) to the recipient's clipboard instead of sending a quick reply.
+  @ApiPropertyOptional({ description: 'Makes it a copy button: tapping copies this text', maxLength: 200 })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  copyCode?: string;
 }
 
 export class SendButtonsDto {
