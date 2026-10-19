@@ -136,8 +136,6 @@ export interface BaileysBodyContent {
     singleSelectReply?: { selectedRowId?: string | null } | null;
   } | null;
   templateButtonReplyMessage?: { selectedDisplayText?: string | null; selectedId?: string | null } | null;
-  /** The user picking a row from a business list message. */
-  listResponseMessage?: { title?: string | null } | null;
   /** A single shared contact card. */
   contactMessage?: { vcard?: string | null } | null;
   /** Several contact cards shared together; each carries its own vCard. */
