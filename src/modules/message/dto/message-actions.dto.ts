@@ -12,6 +12,7 @@ import {
   ArrayMaxSize,
   MaxLength,
   IsIn,
+  IsUrl,
   Validate,
   Matches,
   ValidateNested,
@@ -137,6 +138,13 @@ export class SendButtonDto {
   @IsNotEmpty()
   @MaxLength(200)
   copyCode?: string;
+
+  // With url the button becomes a native link button (cta_url): tapping it opens this address.
+  @ApiPropertyOptional({ description: 'Makes it a link button: tapping opens this URL', maxLength: 2000 })
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['https', 'http'] })
+  @MaxLength(2000)
+  url?: string;
 }
 
 export class SendButtonsDto {
