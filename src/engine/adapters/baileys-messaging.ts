@@ -694,7 +694,12 @@ export class BaileysMessaging {
       header: { ...(input.title ? { title: input.title } : {}), hasMediaAttachment: false },
       nativeFlowMessage: {
         buttons: input.buttons.map(btn =>
-          btn.copyCode
+          btn.url
+            ? {
+                name: 'cta_url',
+                buttonParamsJson: JSON.stringify({ display_text: btn.text, url: btn.url, merchant_url: btn.url }),
+              }
+            : btn.copyCode
             ? {
                 name: 'cta_copy',
                 buttonParamsJson: JSON.stringify({ display_text: btn.text, id: btn.id, copy_code: btn.copyCode }),

@@ -430,8 +430,8 @@ export interface PollInput extends Quotable {
 export interface ButtonsInput extends Quotable {
   /** Body text shown above the buttons. */
   text: string;
-  /** Quick-reply buttons (or copy buttons, with `copyCode`). WhatsApp renders at most 3. */
-  buttons: { id: string; text: string; copyCode?: string }[];
+  /** Quick-reply buttons (or copy buttons, with `copyCode`, or link buttons, with `url`). WhatsApp renders at most 3. */
+  buttons: { id: string; text: string; copyCode?: string; url?: string }[];
   /** Optional title rendered above the body. */
   title?: string;
   /** Optional footer line under the body. */
