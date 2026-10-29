@@ -31,6 +31,7 @@ import {
   QUOTED_MESSAGE_ID_EXAMPLE,
 } from './send-message.dto';
 import { IsMentionWidConstraint } from './is-mention-wid.validator';
+import { ButtonsNotMixedConstraint } from './buttons-not-mixed.validator';
 
 /**
  * Validated DTOs for the message action endpoints. These replaced inline
@@ -180,6 +181,7 @@ export class SendButtonsDto {
   @ArrayMinSize(1)
   @ArrayMaxSize(3)
   @ValidateNested({ each: true })
+  @Validate(ButtonsNotMixedConstraint)
   @Type(() => SendButtonDto)
   buttons!: SendButtonDto[];
 
