@@ -15,6 +15,7 @@ import {
   IsUrl,
   Validate,
   Matches,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { ToStrictArray, ToStrictBoolean, ToStrictNumber, ToStrictString } from '../../../common/utils/strict-boolean';
@@ -118,6 +119,10 @@ export class SendContactDto {
   quotedMessageId?: string;
 }
 
+export const SEND_BUTTON_TYPES = ['reply', 'copy', 'url'] as const;
+export type SendButtonType = (typeof SEND_BUTTON_TYPES)[number];
+export const COPY_CODE_MAX_LENGTH = 512;
+
 export class SendButtonDto {
   @ApiProperty({ description: 'Identifier echoed back when the recipient taps the button', maxLength: 64 })
   @ToStrictString()
@@ -133,19 +138,33 @@ export class SendButtonDto {
   @MaxLength(20)
   text!: string;
 
-  // With copyCode the button becomes a native "copy" button (cta_copy): tapping it copies this
-  // text (e.g. a Pix key) to the recipient's clipboard instead of sending a quick reply.
-  @ApiPropertyOptional({ description: 'Makes it a copy button: tapping copies this text', maxLength: 200 })
+  // The kind is read from copyCode / url; type only states it explicitly, so a caller that sends it
+  // (as Atrion does) is not refused by forbidNonWhitelisted, and copy/url then require their field.
+  @ApiPropertyOptional({
+    description: 'reply (default), copy (requires copyCode) or url (requires url)',
+    enum: SEND_BUTTON_TYPES,
+  })
   @IsOptional()
+  @IsIn(SEND_BUTTON_TYPES)
+  type?: SendButtonType;
+
+  // With copyCode the button becomes a native "copy" button (cta_copy): tapping it copies this
+  // text (e.g. a Pix key) to the recipient's clipboard instead of sending a quick reply. 512 is the
+  // longest a Pix "copia e cola" (EMV BR Code) can be; a dynamic charge often passes 200.
+  @ApiPropertyOptional({
+    description: 'Makes it a copy button: tapping copies this text',
+    maxLength: COPY_CODE_MAX_LENGTH,
+  })
+  @ValidateIf((o: SendButtonDto) => o.type === 'copy' || o.copyCode !== undefined)
   @ToStrictString()
   @IsString()
   @IsNotEmpty()
-  @MaxLength(200)
+  @MaxLength(COPY_CODE_MAX_LENGTH)
   copyCode?: string;
 
   // With url the button becomes a native link button (cta_url): tapping it opens this address.
   @ApiPropertyOptional({ description: 'Makes it a link button: tapping opens this URL', maxLength: 2000 })
-  @IsOptional()
+  @ValidateIf((o: SendButtonDto) => o.type === 'url' || o.url !== undefined)
   @IsUrl({ require_protocol: true, protocols: ['https', 'http'] })
   @MaxLength(2000)
   url?: string;
