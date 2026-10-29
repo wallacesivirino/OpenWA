@@ -563,9 +563,11 @@ export function Sessions() {
       .split('\n')
       .map(l => l.trim())
       .filter(l => l.length > 0);
-    setSavingConfig(true);
+    const id = selectedSessionId;
+    setSavingConfigIds(current => new Set(current).add(id));
     try {
-      const updated = await sessionApi.updateConfig(selectedSessionId, { autoRejectCallsAllowlist: list });
+      const updated = await sessionApi.updateConfig(id, { autoRejectCallsAllowlist: list });
+      if (configSessionId.current !== id) return;
       setSessionConfig(updated);
       // Volta ao valor do servidor: ele normaliza para dígitos, então o que o operador digitou
       // com máscara reaparece limpo — e fica claro que foi isso que ficou salvo.
@@ -576,7 +578,11 @@ export function Sessions() {
         err instanceof Error ? err.message : t('common.unknownError'),
       );
     } finally {
-      setSavingConfig(false);
+      setSavingConfigIds(current => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -589,10 +595,12 @@ export function Sessions() {
 
   const handleMessageSave = async () => {
     if (!selectedSessionId) return;
-    setSavingConfig(true);
+    const id = selectedSessionId;
+    setSavingConfigIds(current => new Set(current).add(id));
     try {
       const text = messageValue.trim();
-      const updated = await sessionApi.updateConfig(selectedSessionId, { autoRejectCallsMessage: text || null });
+      const updated = await sessionApi.updateConfig(id, { autoRejectCallsMessage: text || null });
+      if (configSessionId.current !== id) return;
       setSessionConfig(updated);
       setMessageDraft(null);
     } catch (err) {
@@ -601,7 +609,11 @@ export function Sessions() {
         err instanceof Error ? err.message : t('common.unknownError'),
       );
     } finally {
-      setSavingConfig(false);
+      setSavingConfigIds(current => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -1187,7 +1199,7 @@ export function Sessions() {
                       className="allowlist-input"
                       rows={4}
                       spellCheck={false}
-                      disabled={!canWrite || savingConfig}
+                      disabled={!canWrite || savingConfigIds.has(selectedSession.id)}
                       value={allowlistDraft ?? allowlistSaved}
                       onChange={e => setAllowlistDraft(e.target.value)}
                       placeholder={t('sessions.details.autoRejectAllowlistPlaceholder')}
@@ -1198,7 +1210,7 @@ export function Sessions() {
                         <button
                           type="button"
                           className="btn btn-sm btn-primary"
-                          disabled={savingConfig}
+                          disabled={savingConfigIds.has(selectedSession.id)}
                           onClick={() => void handleAllowlistSave()}
                         >
                           {t('common.save')}
@@ -1206,7 +1218,7 @@ export function Sessions() {
                         <button
                           type="button"
                           className="btn btn-sm"
-                          disabled={savingConfig}
+                          disabled={savingConfigIds.has(selectedSession.id)}
                           onClick={() => setAllowlistDraft(null)}
                         >
                           {t('common.cancel')}
@@ -1226,7 +1238,7 @@ export function Sessions() {
                       className="allowlist-input"
                       rows={3}
                       maxLength={1000}
-                      disabled={!canWrite || savingConfig}
+                      disabled={!canWrite || savingConfigIds.has(selectedSession.id)}
                       value={messageValue}
                       onChange={e =>
                         selectedSessionId && setMessageDraft({ sid: selectedSessionId, text: e.target.value })
@@ -1239,7 +1251,7 @@ export function Sessions() {
                         <button
                           type="button"
                           className="btn btn-sm btn-primary"
-                          disabled={savingConfig}
+                          disabled={savingConfigIds.has(selectedSession.id)}
                           onClick={() => void handleMessageSave()}
                         >
                           {t('common.save')}
@@ -1247,7 +1259,7 @@ export function Sessions() {
                         <button
                           type="button"
                           className="btn btn-sm"
-                          disabled={savingConfig}
+                          disabled={savingConfigIds.has(selectedSession.id)}
                           onClick={() => setMessageDraft(null)}
                         >
                           {t('common.cancel')}
