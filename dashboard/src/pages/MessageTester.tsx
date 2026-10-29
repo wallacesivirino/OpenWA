@@ -429,8 +429,6 @@ export function MessageTester() {
   } else if (messageType === 'list') {
     formValid =
       listText.trim().length > 0 && listButtonText.trim().length > 0 && sectionsFilled.length >= 1;
-  } else if (messageType === 'list') {
-    formValid = listText.trim().length > 0 && listButtonText.trim().length > 0 && sectionsFilled.length >= 1;
   } else if (messageType === 'poll') {
     formValid =
       pollQuestion.trim().length > 0 &&

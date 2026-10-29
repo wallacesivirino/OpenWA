@@ -119,12 +119,14 @@ export class SendContactDto {
 
 export class SendButtonDto {
   @ApiProperty({ description: 'Identifier echoed back when the recipient taps the button', maxLength: 64 })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
   id!: string;
 
   @ApiProperty({ description: 'Button label', maxLength: 20, example: 'Sim' })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
@@ -134,6 +136,7 @@ export class SendButtonDto {
   // text (e.g. a Pix key) to the recipient's clipboard instead of sending a quick reply.
   @ApiPropertyOptional({ description: 'Makes it a copy button: tapping copies this text', maxLength: 200 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
@@ -148,12 +151,16 @@ export class SendButtonDto {
 }
 
 export class SendButtonsDto {
-  @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)' })
+  @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)', maxLength: CHAT_ID_MAX_LENGTH })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(CHAT_ID_MAX_LENGTH)
+  @Matches(CHAT_JID_PATTERN, { message: CHAT_JID_MESSAGE })
   chatId!: string;
 
   @ApiProperty({ description: 'Body text shown above the buttons', maxLength: 1024 })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(1024)
@@ -178,30 +185,35 @@ export class SendButtonsDto {
 
   @ApiPropertyOptional({ description: 'Title rendered above the body', maxLength: 60 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   @MaxLength(60)
   title?: string;
 
   @ApiPropertyOptional({ description: 'Footer line under the body', maxLength: 60 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   @MaxLength(60)
   footer?: string;
 
   @ApiPropertyOptional({ description: 'Quote an earlier message, turning this send into a reply' })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   quotedMessageId?: string;
 }
 
 export class SendListRowDto {
   @ApiProperty({ description: 'Identifier echoed back when the row is picked', maxLength: 64 })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
   id!: string;
 
   @ApiProperty({ description: 'Row title', maxLength: 24 })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(24)
@@ -209,6 +221,7 @@ export class SendListRowDto {
 
   @ApiPropertyOptional({ description: 'Secondary line under the title', maxLength: 72 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   @MaxLength(72)
   description?: string;
@@ -216,6 +229,7 @@ export class SendListRowDto {
 
 export class SendListSectionDto {
   @ApiProperty({ description: 'Section heading', maxLength: 24 })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(24)
@@ -231,18 +245,23 @@ export class SendListSectionDto {
 }
 
 export class SendListDto {
-  @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)' })
+  @ApiProperty({ description: 'Chat ID (e.g. 628123456789@c.us or 1203630000@g.us)', maxLength: CHAT_ID_MAX_LENGTH })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(CHAT_ID_MAX_LENGTH)
+  @Matches(CHAT_JID_PATTERN, { message: CHAT_JID_MESSAGE })
   chatId!: string;
 
   @ApiProperty({ description: 'Body text of the message', maxLength: 1024 })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(1024)
   text!: string;
 
   @ApiProperty({ description: 'Label of the button that opens the list', maxLength: 20, example: 'Ver opcoes' })
+  @ToStrictString()
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
@@ -258,18 +277,21 @@ export class SendListDto {
 
   @ApiPropertyOptional({ description: 'Bold title above the body', maxLength: 60 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   @MaxLength(60)
   title?: string;
 
   @ApiPropertyOptional({ description: 'Footer line under the body', maxLength: 60 })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   @MaxLength(60)
   footer?: string;
 
   @ApiPropertyOptional({ description: 'Quote an earlier message, turning this send into a reply' })
   @IsOptional()
+  @ToStrictString()
   @IsString()
   quotedMessageId?: string;
 }
