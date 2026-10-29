@@ -494,6 +494,8 @@
       "lastActive": "Última atividade",
       "autoRejectCalls": "Rejeitar chamadas automaticamente",
       "autoRejectCallsHint": "As chamadas recebidas são recusadas assim que tocam. O webhook call.received continua sendo enviado antes. Vale a partir da próxima chamada, sem reiniciar. Somente no mecanismo Baileys: o whatsapp-web.js não consegue recusar chamadas.",
+      "phoneNotifications": "Notificações no celular",
+      "phoneNotificationsHint": "Ligado, a sessão conecta sem aparecer online e o celular deste número continua recebendo as notificações de mensagens. Desligado, a sessão aparece online e o WhatsApp silencia o celular enquanto ela estiver conectada. Vale na hora, sem reiniciar.",
       "autoRejectAllowlist": "Exceções (não rejeitar destes números)",
       "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
       "autoRejectAllowlistHint": "Um número por linha, em qualquer formato — só os dígitos são comparados. Deixe vazio para rejeitar todas. Quem liga com id de privacidade (@lid) não tem número e será rejeitado mesmo estando na lista.",

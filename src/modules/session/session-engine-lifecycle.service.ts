@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource, IsNull } from 'typeorm';
 import { Session, SessionStatus } from './entities/session.entity';
+import { configuredMarkOnline } from './own-presence-config';
 import { EngineFactory } from '../../engine/engine.factory';
 import { EngineRegistry } from '../../engine/engine-registry.service';
 import { decideReconnect, clampNumber, STABLE_READY_MS, type ReconnectAttemptState } from './reconnect-policy';
@@ -976,11 +977,12 @@ export class SessionEngineLifecycle {
       }),
     );
 
-    // Re-apply a prior PUT /presence once per open. Baileys' markOnlineOnConnect has already
-    // broadcast `available` during this handshake; without this, an `available: false` the caller
-    // published would not survive a transient reconnect inside the same engine. A replaced engine
-    // cleared the preference in initializeEngine, so this is a no-op there. Not awaited — on
-    // whatsapp-web.js the call is a page evaluate, and READY must not wait on it.
+    // Re-apply a prior PUT /presence once per open, else the session's config.markOnlineOnConnect.
+    // Baileys' markOnlineOnConnect has already broadcast its server-wide choice during this
+    // handshake; without this, an `available: false` the caller published would not survive a
+    // transient reconnect inside the same engine, and a per-session setting would never apply. A
+    // replaced engine cleared the preference in initializeEngine, so only the config applies there.
+    // Not awaited — on whatsapp-web.js the call is a page evaluate, and READY must not wait on it.
     this.reapplyOwnPresence(id);
 
     // Best-effort snapshot of the account's own contacts' currently-active statuses. Live status
@@ -997,22 +999,34 @@ export class SessionEngineLifecycle {
   }
 
   /**
-   * Re-publish the last successful PUT /presence for this engine. No-op when the caller never set
-   * one, or the engine is already gone. A failure is logged and swallowed: presence must not turn
-   * a successful connect into an error, and the stored preference stays for the next open.
+   * Re-publish the last successful PUT /presence for this engine, or else the session's
+   * config.markOnlineOnConnect. No-op when neither is set, or the engine is already gone. A failure
+   * is logged and swallowed: presence must not turn a successful connect into an error, and the
+   * stored preference stays for the next open.
    */
   private reapplyOwnPresence(id: string): void {
-    const desired = this.presence.getOwnIntent(id);
-    if (desired === undefined) return;
-    const engine = this.engines.get(id);
-    if (!engine) return;
-    void engine.setOnlinePresence(desired).catch(error => {
-      this.logger.warn(`Could not re-apply own presence for session ${id} (best-effort)`, {
-        sessionId: id,
-        error: error instanceof Error ? error.message : String(error),
-        action: 'own_presence_reapply_failed',
+    void this.desiredOwnPresence(id)
+      .then(desired => {
+        if (desired === undefined) return;
+        const engine = this.engines.get(id);
+        if (!engine) return;
+        return engine.setOnlinePresence(desired);
+      })
+      .catch(error => {
+        this.logger.warn(`Could not re-apply own presence for session ${id} (best-effort)`, {
+          sessionId: id,
+          error: error instanceof Error ? error.message : String(error),
+          action: 'own_presence_reapply_failed',
+        });
       });
-    });
+  }
+
+  /** The PUT /presence intent for this engine, else the session's stored markOnlineOnConnect. */
+  private async desiredOwnPresence(id: string): Promise<boolean | undefined> {
+    const intent = this.presence.getOwnIntent(id);
+    if (intent !== undefined) return intent;
+    const session = await this.sessionRepository.findOne({ where: { id }, select: { id: true, config: true } });
+    return configuredMarkOnline(session?.config);
   }
 
   /**

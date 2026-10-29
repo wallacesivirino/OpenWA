@@ -65,6 +65,21 @@ export class UpdateSessionConfigDto {
 
   @ApiPropertyOptional({
     description:
+      "Announce the account online when the connection opens. WhatsApp mutes the paired phone's " +
+      'push notifications while a linked device is online, so `false` keeps the phone notifying ' +
+      '(#871). Overrides BAILEYS_MARK_ONLINE_ON_CONNECT for this session; `null` goes back to it. ' +
+      'Applied right away to a connected session, and again on every connect.',
+    example: false,
+    nullable: true,
+    type: Boolean,
+  })
+  @ToStrictBoolean()
+  @IsOptional()
+  @IsBoolean()
+  markOnlineOnConnect?: boolean | null;
+
+  @ApiPropertyOptional({
+    description:
       'Cap on consecutive reconnect attempts (`0` disables reconnect entirely). Send `null` for ' +
       'unlimited, which is the default. Applies on the next session start, not to a reconnect ' +
       "sequence already in flight. Bounds the gateway's own reconnect, which is every reconnect on " +
@@ -131,6 +146,14 @@ export class SessionConfigResponseDto {
     type: String,
   })
   autoRejectCallsMessage!: string | null;
+
+  @ApiProperty({
+    description:
+      'Whether the account is announced online on connect (the session setting, else ' +
+      "BAILEYS_MARK_ONLINE_ON_CONNECT). `true` mutes the paired phone's push notifications.",
+    example: false,
+  })
+  markOnlineOnConnect!: boolean;
 
   @ApiProperty({
     description:

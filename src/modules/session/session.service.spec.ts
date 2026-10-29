@@ -7790,6 +7790,94 @@ describe('SessionService', () => {
       expect(await service.getPresence('sess-uuid-1', 'c@c.us')).toBeNull();
     });
 
+    describe('per-session markOnlineOnConnect', () => {
+      // updateConfig reads the raw column text; serve it from whatever row findOne is mocked to hold.
+      const serveRawConfig = () => {
+        const raw = {
+          select: () => raw,
+          where: () => raw,
+          getRawOne: async () => {
+            const row = (await (repository.findOne as jest.Mock)()) as Session | null;
+            return row ? { config: JSON.stringify(row.config) } : undefined;
+          },
+        };
+        repository.createQueryBuilder = jest.fn().mockReturnValue(raw);
+      };
+
+      it('publishes the stored setting when the connection opens', async () => {
+        const callbacks = await startAndCaptureCallbacks();
+        (repository.findOne as jest.Mock).mockResolvedValue(
+          createMockSession({ config: { markOnlineOnConnect: false } }),
+        );
+        mockEngine.setOnlinePresence.mockClear();
+
+        callbacks.onReady!('628123', 'Alice');
+        await flush();
+
+        expect(mockEngine.setOnlinePresence).toHaveBeenCalledTimes(1);
+        expect(mockEngine.setOnlinePresence).toHaveBeenCalledWith(false);
+      });
+
+      it('publishes nothing on open when the session defers to the server default', async () => {
+        const callbacks = await startAndCaptureCallbacks(); // fixture config has no markOnlineOnConnect
+        mockEngine.setOnlinePresence.mockClear();
+
+        callbacks.onReady!('628123', 'Alice');
+        await flush();
+
+        expect(mockEngine.setOnlinePresence).not.toHaveBeenCalled();
+      });
+
+      it('lets a later PUT /presence win over the stored setting', async () => {
+        const callbacks = await startAndCaptureCallbacks();
+        await service.setOnlinePresence('sess-uuid-1', true);
+        (repository.findOne as jest.Mock).mockResolvedValue(
+          createMockSession({ config: { markOnlineOnConnect: false } }),
+        );
+        mockEngine.setOnlinePresence.mockClear();
+
+        callbacks.onReady!('628123', 'Alice');
+        await flush();
+
+        expect(mockEngine.setOnlinePresence).toHaveBeenCalledTimes(1);
+        expect(mockEngine.setOnlinePresence).toHaveBeenCalledWith(true);
+      });
+
+      it('applies a changed setting to the connected engine at once, and it then governs the next open', async () => {
+        const callbacks = await startAndCaptureCallbacks();
+        await service.setOnlinePresence('sess-uuid-1', true); // an older intent the switch must replace
+        serveRawConfig();
+        mockEngine.setOnlinePresence.mockClear();
+
+        await expect(service.updateConfig('sess-uuid-1', { markOnlineOnConnect: false })).resolves.toMatchObject({
+          markOnlineOnConnect: false,
+        });
+        await flush();
+        expect(mockEngine.setOnlinePresence).toHaveBeenCalledWith(false);
+
+        (repository.findOne as jest.Mock).mockResolvedValue(
+          createMockSession({ config: { markOnlineOnConnect: false } }),
+        );
+        mockEngine.setOnlinePresence.mockClear();
+        callbacks.onReady!('628123', 'Alice');
+        await flush();
+        expect(mockEngine.setOnlinePresence).toHaveBeenCalledWith(false);
+      });
+
+      it('keeps the stored setting when the immediate publish fails', async () => {
+        await startAndCaptureCallbacks();
+        serveRawConfig();
+        mockEngine.setOnlinePresence.mockRejectedValueOnce(new Error('push name not synced'));
+
+        await expect(service.updateConfig('sess-uuid-1', { markOnlineOnConnect: false })).resolves.toMatchObject({
+          markOnlineOnConnect: false,
+        });
+        await flush();
+        const calls = (repository.update as jest.Mock).mock.calls as unknown[][];
+        expect(calls.at(-1)![1]).toEqual({ config: { markOnlineOnConnect: false } });
+      });
+    });
+
     it('does not replay a presence publish that settles after its engine was replaced', async () => {
       await startAndCaptureCallbacks();
       let finishPublish: () => void = () => undefined;
@@ -11859,6 +11947,7 @@ describe('SessionService', () => {
         autoRejectCalls: false,
         autoRejectCallsAllowlist: [],
         autoRejectCallsMessage: null,
+        markOnlineOnConnect: true,
         maxReconnectAttempts: null,
         reconnectBaseDelay: 5000,
       });
@@ -11936,6 +12025,7 @@ describe('SessionService', () => {
         autoRejectCalls: false,
         autoRejectCallsAllowlist: [],
         autoRejectCallsMessage: null,
+        markOnlineOnConnect: true,
         maxReconnectAttempts: 20,
         reconnectBaseDelay: 1000,
       });

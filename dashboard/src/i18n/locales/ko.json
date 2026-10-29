@@ -489,6 +489,8 @@
       "lastActive": "마지막 활동",
       "autoRejectCalls": "통화 자동 거절",
       "autoRejectCallsHint": "수신 통화가 울리는 즉시 거절됩니다. call.received 웹훅은 그전에 그대로 전송됩니다. 다음 통화부터 적용되며 재시작이 필요하지 않습니다. Baileys 엔진에서만 동작합니다. whatsapp-web.js에서는 통화를 거절할 수 없습니다.",
+      "phoneNotifications": "Phone notifications",
+      "phoneNotificationsHint": "Keep this on and the session connects without announcing itself online, so the phone paired with this number keeps getting message notifications. Turned off, the session appears online and WhatsApp mutes the phone while it is connected. Applies right away, no restart needed.",
       "autoRejectAllowlist": "Exceptions (never reject these numbers)",
       "autoRejectAllowlistPlaceholder": "5527999291186\n+55 11 98888-7777",
       "autoRejectAllowlistHint": "One number per line, any format — only digits are compared. Leave empty to reject every call. A caller behind a privacy id (@lid) carries no number and is rejected even if listed.",

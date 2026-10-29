@@ -43,6 +43,11 @@ export class PresenceStore {
     this.ownIntent.set(sessionId, available);
   }
 
+  /** Forget the preference, so the session's stored config governs the next connect again. */
+  clearOwnIntent(sessionId: string): void {
+    this.ownIntent.delete(sessionId);
+  }
+
   /** The last setOwnIntent value, or undefined when the caller never set one. */
   getOwnIntent(sessionId: string): boolean | undefined {
     return this.ownIntent.get(sessionId);

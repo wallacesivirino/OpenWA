@@ -563,6 +563,31 @@ export function Sessions() {
     }
   };
 
+  // The switch reads as "phone notifications on", the inverse of the stored markOnlineOnConnect.
+  const handlePhoneNotificationsToggle = async (notify: boolean) => {
+    if (!selectedSessionId || !sessionConfig) return;
+    const id = selectedSessionId;
+    const previous = sessionConfig;
+    setSessionConfig({ ...sessionConfig, markOnlineOnConnect: !notify });
+    setSavingConfigIds(current => new Set(current).add(id));
+    try {
+      const saved = await sessionApi.updateConfig(id, { markOnlineOnConnect: !notify });
+      if (configSessionId.current === id) setSessionConfig(saved);
+    } catch (err) {
+      if (configSessionId.current === id) setSessionConfig(previous);
+      toast.error(
+        t('sessions.details.phoneNotifications'),
+        err instanceof Error ? err.message : t('common.unknownError'),
+      );
+    } finally {
+      setSavingConfigIds(current => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
   const handleAutoRejectToggle = async (next: boolean) => {
     if (!selectedSessionId || !sessionConfig) return;
     const id = selectedSessionId;
@@ -1105,6 +1130,26 @@ export function Sessions() {
                 {selectedSession.lastActive ? new Date(selectedSession.lastActive).toLocaleString() : t('common.never')}
               </span>
             </div>
+            {sessionConfig && (
+              <div className="detail-item detail-item-toggle">
+                <div className="detail-toggle-row">
+                  <span className="detail-label" id="phone-notifications-label">
+                    {t('sessions.details.phoneNotifications')}
+                  </span>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      aria-labelledby="phone-notifications-label"
+                      checked={!sessionConfig.markOnlineOnConnect}
+                      disabled={!canWrite || savingConfigIds.has(selectedSession.id)}
+                      onChange={e => void handlePhoneNotificationsToggle(e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+                <small className="detail-hint">{t('sessions.details.phoneNotificationsHint')}</small>
+              </div>
+            )}
             {sessionConfig && (
               <div className="detail-item detail-item-toggle">
                 <div className="detail-toggle-row">

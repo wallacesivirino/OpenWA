@@ -50,6 +50,7 @@ import {
 } from './session-engine-lifecycle.service';
 import { normalizeAllowlist } from './call-allowlist';
 import { normalizeRejectMessage } from './call-reject-reply';
+import { resolveMarkOnline } from './own-presence-config';
 import { SessionOwnershipService } from './session-ownership.service';
 import { paginate, ListOptions, resolveListWindow } from '../../common/utils/paginate';
 import { ListingMemo } from '../../common/utils/listing-memo';
@@ -560,6 +561,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
         ? normalizeAllowlist(config.autoRejectCallsAllowlist as string[])
         : [],
       autoRejectCallsMessage: normalizeRejectMessage(config?.autoRejectCallsMessage),
+      markOnlineOnConnect: resolveMarkOnline(config),
       maxReconnectAttempts: Number.isFinite(maxAttempts) ? maxAttempts : null,
       reconnectBaseDelay: baseDelay,
     };
@@ -605,6 +607,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
         'autoRejectCalls',
         'autoRejectCallsAllowlist',
         'autoRejectCallsMessage',
+        'markOnlineOnConnect',
         'maxReconnectAttempts',
         'reconnectBaseDelay',
       ] as const) {
@@ -635,12 +638,32 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
         { config: config as QueryDeepPartialEntity<Record<string, unknown>> },
       );
       if (affected !== 0) {
+        if (dto.markOnlineOnConnect !== undefined) this.applyMarkOnline(id, resolveMarkOnline(config));
         return this.projectConfig(config);
       }
       if (attempt >= 5) {
         throw new ConflictException('Session config is being changed by other requests; retry');
       }
     }
+  }
+
+  /**
+   * Publish a changed markOnlineOnConnect to the connected engine now, so the phone's notifications
+   * follow the switch without a reconnect. Best-effort and not awaited: the setting is already stored
+   * and is applied again on every connect, so a session that is not ready yet still converges. A
+   * prior PUT /presence intent is dropped, otherwise its replay on the next connect would undo this.
+   */
+  private applyMarkOnline(id: string, available: boolean): void {
+    this.presence.clearOwnIntent(id);
+    const engine = this.engines.get(id);
+    if (!engine) return;
+    void engine.setOnlinePresence(available).catch(error => {
+      this.logger.warn(`Could not apply markOnlineOnConnect to session ${id} now (applies on next connect)`, {
+        sessionId: id,
+        error: error instanceof Error ? error.message : String(error),
+        action: 'mark_online_apply_failed',
+      });
+    });
   }
 
   async getProxy(id: string): Promise<SessionProxyResponseDto> {

@@ -493,6 +493,8 @@
       "created": "बनाया गया",
       "lastActive": "अंतिम सक्रिय",
       "autoRejectCalls": "कॉल स्वतः अस्वीकार करें",
+      "phoneNotifications": "Phone notifications",
+      "phoneNotificationsHint": "Keep this on and the session connects without announcing itself online, so the phone paired with this number keeps getting message notifications. Turned off, the session appears online and WhatsApp mutes the phone while it is connected. Applies right away, no restart needed.",
       "autoRejectCallsHint": "इनकमिंग कॉल रिंग होते ही अस्वीकार कर दिए जाते हैं। call.received वेबहुक अभी भी पहले फायर होता है। अगले कॉल पर लागू होता है, पुनः आरंभ की आवश्यकता नहीं है। केवल Baileys इंजन: whatsapp-web.js कॉल अस्वीकार नहीं कर सकता।"
     },
     "proxy": {

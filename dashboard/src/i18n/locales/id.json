@@ -493,6 +493,8 @@
       "created": "Dibuat",
       "lastActive": "Terakhir Aktif",
       "autoRejectCalls": "Tolak panggilan otomatis",
+      "phoneNotifications": "Phone notifications",
+      "phoneNotificationsHint": "Keep this on and the session connects without announcing itself online, so the phone paired with this number keeps getting message notifications. Turned off, the session appears online and WhatsApp mutes the phone while it is connected. Applies right away, no restart needed.",
       "autoRejectCallsHint": "Panggilan masuk langsung ditolak saat berdering. Webhook call.received tetap terpicu terlebih dahulu. Berlaku untuk panggilan berikutnya, tanpa perlu restart. Hanya engine Baileys: whatsapp-web.js tidak dapat menolak panggilan."
     },
     "proxy": {
