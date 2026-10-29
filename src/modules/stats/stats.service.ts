@@ -243,15 +243,7 @@ export class StatsService {
     }
 
     // By session
-    const bySessionRaw = await this.messageRepo
-      .createQueryBuilder('m')
-      .select('m.sessionId', 'sessionId')
-      .addSelect('m.direction', 'direction')
-      .addSelect('COUNT(*)', 'count')
-      .where('m.createdAt >= :since', { since })
-      .groupBy('m.sessionId')
-      .addGroupBy('m.direction')
-      .getRawMany<{ sessionId: string; direction: string; count: string }>();
+    const bySessionRaw = await this.getBySession(since);
 
     const sessionMap = new Map<string, { sent: number; received: number }>();
     for (const row of bySessionRaw) {
@@ -284,6 +276,36 @@ export class StatsService {
         messageCount: parseInt(c.messageCount),
       })),
     };
+  }
+
+  /** Message counts since `since` per session and direction. */
+  private async getBySession(since: Date): Promise<Array<{ sessionId: string; direction: string; count: string }>> {
+    if (this.dataDbType === 'postgres') {
+      return this.messageRepo
+        .createQueryBuilder('m')
+        .select('m.sessionId', 'sessionId')
+        .addSelect('m.direction', 'direction')
+        .addSelect('COUNT(*)', 'count')
+        .where('m.createdAt >= :since', { since })
+        .groupBy('m.sessionId')
+        .addGroupBy('m.direction')
+        .getRawMany<{ sessionId: string; direction: string; count: string }>();
+    }
+    // Same trap as getTopChats: with no statistics SQLite answers GROUP BY sessionId, direction by
+    // walking IDX_messages_session_direction_timestamp_id over the WHOLE table, reading every row for
+    // its createdAt (6-18 s on a 4 GB table, all of it on the event loop, so every request waits).
+    // Materializing the createdAt window first keeps the read to the period (50 ms on the same table).
+    const [window, params] = this.messageRepo
+      .createQueryBuilder('m')
+      .select('m.sessionId', 'sessionId')
+      .addSelect('m.direction', 'direction')
+      .where('m.createdAt >= :since', { since })
+      .getQueryAndParameters();
+    return this.messageRepo.manager.query(
+      `WITH w AS MATERIALIZED (${window}) SELECT w.sessionId AS "sessionId", w.direction AS "direction", ` +
+        `COUNT(*) AS "count" FROM w GROUP BY w.sessionId, w.direction`,
+      params,
+    );
   }
 
   /** The ten chats with the most messages since `since`, each 1:1 chat with its name. */

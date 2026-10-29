@@ -305,7 +305,7 @@ describe('StatsService time-series + hourly activity on SQLite (end-to-end regre
   // SQLite keeps no statistics, so GROUP BY m.chatId made it read the whole table in chatId index order for a
   // window of a few rows (3.2 s over 59k messages, on the event loop). The window must be read through the
   // createdAt index and the table never scanned.
-  it('the overall top chats read the createdAt window through its index, never the whole table', async () => {
+  it('the overall top chats and per-session counts read the createdAt window through its index, never the whole table', async () => {
     await addSession();
     for (let i = 0; i < 40; i++) await seedMessage({ chatId: `chat${i % 8}@c.us` });
     const seen: Array<[string, unknown[]]> = [];
@@ -317,12 +317,14 @@ describe('StatsService time-series + hourly activity on SQLite (end-to-end regre
 
     await service.getMessageStats('24h');
 
-    expect(seen).toHaveLength(1);
-    const [sql, params] = seen[0];
-    const plan = await ds.query<Array<{ detail: string }>>(`EXPLAIN QUERY PLAN ${sql}`, params);
-    const details = plan.map(row => row.detail);
-    expect(details.some(d => /USING (COVERING )?INDEX IDX_messages_createdAt/.test(d))).toBe(true);
-    expect(details.filter(d => /^SCAN (messages|m)\b/.test(d))).toEqual([]);
+    // Two windowed reads: the per-session counts (same GROUP BY trap, over sessionId/direction) and top chats.
+    expect(seen).toHaveLength(2);
+    for (const [sql, params] of seen) {
+      const plan = await ds.query<Array<{ detail: string }>>(`EXPLAIN QUERY PLAN ${sql}`, params);
+      const details = plan.map(row => row.detail);
+      expect(details.some(d => /USING (COVERING )?INDEX IDX_messages_createdAt/.test(d))).toBe(true);
+      expect(details.filter(d => /^SCAN (messages|m)\b/.test(d))).toEqual([]);
+    }
   });
 
   // Today starts at local midnight, so it must differ from the all-time count. A row two days old is before
