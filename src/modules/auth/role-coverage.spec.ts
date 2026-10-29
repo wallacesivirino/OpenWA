@@ -132,6 +132,8 @@ describe('role of every message and session route', () => {
     sendContact: ApiKeyRole.OPERATOR,
     sendSticker: ApiKeyRole.OPERATOR,
     sendPoll: ApiKeyRole.OPERATOR,
+    sendButtons: ApiKeyRole.OPERATOR,
+    sendList: ApiKeyRole.OPERATOR,
     reply: ApiKeyRole.OPERATOR,
     clickButton: ApiKeyRole.OPERATOR,
     forward: ApiKeyRole.OPERATOR,

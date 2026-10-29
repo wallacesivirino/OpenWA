@@ -575,17 +575,14 @@ export class MessageSendService {
       quotedMessageId?: string;
     },
   ): Promise<MessageResponseDto> {
-    const finalDto = await this.applySendingGate(sessionId, 'buttons', dto);
-    const engine = this.getEngine(sessionId);
-
     // Stored as the body text: that is what a client that cannot render the buttons shows, and it
     // keeps the history readable the same way the poll path stores its question.
-    const message = await this.saveOutgoingMessage(sessionId, {
+    const { message, finalDto, engine } = await this.applySendingGate(sessionId, 'buttons', dto, finalDto => ({
       chatId: finalDto.chatId,
       body: finalDto.text,
       type: 'buttons',
       quotedMessageId: finalDto.quotedMessageId,
-    });
+    }));
 
     let result: MessageResult;
     try {
@@ -614,15 +611,12 @@ export class MessageSendService {
       quotedMessageId?: string;
     },
   ): Promise<MessageResponseDto> {
-    const finalDto = await this.applySendingGate(sessionId, 'list', dto);
-    const engine = this.getEngine(sessionId);
-
-    const message = await this.saveOutgoingMessage(sessionId, {
+    const { message, finalDto, engine } = await this.applySendingGate(sessionId, 'list', dto, finalDto => ({
       chatId: finalDto.chatId,
       body: finalDto.text,
       type: 'list',
       quotedMessageId: finalDto.quotedMessageId,
-    });
+    }));
 
     let result: MessageResult;
     try {
