@@ -2,7 +2,12 @@ import { plainToInstance } from 'class-transformer';
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface, validateSync } from 'class-validator';
 import { UpdateSessionConfigDto } from './session-config.dto';
 
-const RECOGNISED_KEYS = ['autoRejectCalls', 'maxReconnectAttempts', 'reconnectBaseDelay'] as const;
+const RECOGNISED_KEYS = [
+  'autoRejectCalls',
+  'markOnlineOnConnect',
+  'maxReconnectAttempts',
+  'reconnectBaseDelay',
+] as const;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

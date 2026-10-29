@@ -35,6 +35,8 @@ export interface SessionConfig {
   autoRejectCallsAllowlist: string[];
   /** Text sent to a caller right after an auto-rejected call; null when disabled. */
   autoRejectCallsMessage: string | null;
+  /** Announced online on connect; true mutes the paired phone's notifications (#871). */
+  markOnlineOnConnect: boolean;
   maxReconnectAttempts: number | null;
   reconnectBaseDelay: number;
 }
