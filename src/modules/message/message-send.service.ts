@@ -605,6 +605,7 @@ export class MessageSendService {
       title?: string;
       footer?: string;
       quotedMessageId?: string;
+      resetMarker?: string;
     },
   ): Promise<MessageResponseDto> {
     // Stored as the body text: that is what a client that cannot render the buttons shows, and it
@@ -624,6 +625,7 @@ export class MessageSendService {
         title: finalDto.title,
         footer: finalDto.footer,
         quotedMessageId: finalDto.quotedMessageId,
+        resetMarker: finalDto.resetMarker,
       });
     } catch (error) {
       return this.failSend(sessionId, 'buttons', message, finalDto, error);

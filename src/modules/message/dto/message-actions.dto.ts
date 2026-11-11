@@ -223,6 +223,19 @@ export class SendButtonsDto {
   @ToStrictString()
   @IsString()
   quotedMessageId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Short text (e.g. an emoji) sent right after the buttons, carrying a biz node that clears the ' +
+      '"managed by a business" marker (the (i) icon) the buttons leave on the recipient\'s chat. Baileys only.',
+    maxLength: 60,
+  })
+  @IsOptional()
+  @ToStrictString()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(60)
+  resetMarker?: string;
 }
 
 export class SendListRowDto {

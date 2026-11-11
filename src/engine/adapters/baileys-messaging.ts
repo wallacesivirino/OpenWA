@@ -138,6 +138,19 @@ function buildBizNode(kind: 'interactive' | 'list'): BinaryNode {
   };
 }
 
+/**
+ * The opposite of buildBizNode: a childless `biz` node declaring the chat self-hosted with no third
+ * party (actual_actors 0 = self, host_storage 1 = on-premise) and a fresh privacy_mode_ts. The
+ * recipient's client keeps the latest privacy mode per chat, so one message carrying this clears the
+ * (i) "managed by a business" marker the interactive sends leave behind. Verified 11/11/2026.
+ */
+function buildBizResetNode(): BinaryNode {
+  return {
+    tag: 'biz',
+    attrs: { actual_actors: '0', host_storage: '1', privacy_mode_ts: `${(Date.now() / 1000) | 0}` },
+  };
+}
+
 function isWebpBuffer(data: Buffer): boolean {
   return (
     data.length > 12 &&
@@ -885,6 +898,27 @@ export class BaileysMessaging {
       }),
     );
     void this.emitOwnSendEcho(generated);
+
+    if (input.resetMarker) {
+      // Best effort: the buttons already went out, so a failure here must not fail the send.
+      try {
+        const reset = b.generateWAMessageFromContent(
+          jid,
+          { conversation: input.resetMarker } as Parameters<typeof b.generateWAMessageFromContent>[1],
+          { userJid: this.host.normalizedSelfJid() },
+        );
+        await this.sock().relayMessage(jid, reset.message!, {
+          messageId: reset.key.id!,
+          additionalNodes: [buildBizResetNode()],
+        });
+        void this.host.putStoredMessage(reset)?.catch(() => undefined);
+        void this.emitOwnSendEcho(reset);
+      } catch (err) {
+        this.host.logger.warn('Failed to send the business-marker reset after buttons', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
 
     return { id: generated.key.id ?? '', timestamp: this.host.toUnixSeconds(generated.messageTimestamp) };
   }
