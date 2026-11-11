@@ -459,6 +459,11 @@ export interface ButtonsInput extends Quotable {
   title?: string;
   /** Optional footer line under the body. */
   footer?: string;
+  /**
+   * Optional short text sent right after the buttons with a "self-hosted, no third party" biz node,
+   * clearing the business marker (the (i) icon) the buttons leave on the recipient's chat.
+   */
+  resetMarker?: string;
 }
 
 /**
