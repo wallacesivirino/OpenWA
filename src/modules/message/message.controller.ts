@@ -42,6 +42,7 @@ import {
   ReplyMessageDto,
   ForwardMessageDto,
   ReactMessageDto,
+  ResetBusinessMarkerDto,
   DeleteMessageDto,
   EditMessageDto,
   PinMessageDto,
@@ -572,6 +573,16 @@ export class MessageController {
   @ApiResponse({ status: 503, description: SEND_503 })
   async forward(@Param('sessionId') sessionId: string, @Body() dto: ForwardMessageDto): Promise<MessageResponseDto> {
     return this.messageService.forward(sessionId, dto);
+  }
+
+  @ChatScoped('fenced')
+  @Post('reset-business-marker')
+  @HttpCode(HttpStatus.OK)
+  @RequireRole(ApiKeyRole.OPERATOR)
+  @ApiOperation({ summary: 'Clear the (i) business marker that buttons leave on a chat (Baileys)' })
+  @ApiParam({ name: 'sessionId', description: 'Session ID' })
+  async resetBusinessMarker(@Param('sessionId') sessionId: string, @Body() dto: ResetBusinessMarkerDto) {
+    return this.messageService.resetBusinessMarker(sessionId, dto);
   }
 
   // ========== Phase 3: Reactions ==========

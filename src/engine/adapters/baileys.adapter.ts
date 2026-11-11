@@ -401,6 +401,10 @@ export class BaileysAdapter implements IWhatsAppEngine {
     return this.messaging.sendButtonsMessage(chatId, input);
   }
 
+  async resetBusinessMarker(chatId: string): Promise<MessageResult> {
+    return this.messaging.resetBusinessMarker(chatId);
+  }
+
   async sendListMessage(chatId: string, input: ListInput): Promise<MessageResult> {
     return this.messaging.sendListMessage(chatId, input);
   }

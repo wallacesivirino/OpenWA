@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, Optional } from '@n
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, ObjectLiteral, Repository } from 'typeorm';
 import { Readable } from 'stream';
+import { EngineNotSupportedError } from '../../common/errors/engine-not-supported.error';
 import { EngineRegistry } from '../../engine/engine-registry.service';
 import type { IncomingMessage } from '../../engine/interfaces/whatsapp-engine.interface';
 import { MessageProjector } from '../session/message-projector.service';
@@ -629,6 +630,12 @@ export class MessageService implements PluginMessagePort {
   }
 
   // ========== Phase 3: Reactions ==========
+
+  async resetBusinessMarker(sessionId: string, dto: { chatId: string }) {
+    const engine = this.getEngine(sessionId);
+    if (!engine.resetBusinessMarker) throw new EngineNotSupportedError('resetBusinessMarker');
+    return engine.resetBusinessMarker(dto.chatId);
+  }
 
   async reactToMessage(sessionId: string, dto: { chatId: string; messageId: string; emoji: string }): Promise<void> {
     const engine = this.getEngine(sessionId);

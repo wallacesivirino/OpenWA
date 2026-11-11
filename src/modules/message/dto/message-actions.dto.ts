@@ -446,6 +446,16 @@ export class ForwardMessageDto {
   messageId!: string;
 }
 
+export class ResetBusinessMarkerDto {
+  @ApiProperty({ maxLength: CHAT_ID_MAX_LENGTH })
+  @ToStrictString()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(CHAT_ID_MAX_LENGTH)
+  @Matches(CHAT_JID_PATTERN, { message: CHAT_JID_MESSAGE })
+  chatId!: string;
+}
+
 export class ReactMessageDto {
   @ApiProperty({ maxLength: CHAT_ID_MAX_LENGTH })
   @ToStrictString()
