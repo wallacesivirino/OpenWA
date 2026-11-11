@@ -855,6 +855,26 @@ export class BaileysMessaging {
    *   - the `quality_control` child with a random `decision_id` is required, not decorative.
    *   - the content must NOT be wrapped in `viewOnceMessage`; the wrapper breaks rendering.
    */
+  /**
+   * Send `text` with buildBizResetNode, clearing the business marker on the recipient's chat.
+   * Clients do not display a message carrying this node (verified 11/11/2026), so the text is moot.
+   */
+  async resetBusinessMarker(chatId: string, text = '\u{1F609}'): Promise<MessageResult> {
+    this.host.ensureReady();
+    const b = await this.host.loadLib();
+    const jid = await this.toDeliverableJid(chatId);
+    const reset = b.generateWAMessageFromContent(
+      jid,
+      { conversation: text } as Parameters<typeof b.generateWAMessageFromContent>[1],
+      { userJid: this.host.normalizedSelfJid() },
+    );
+    await this.sock().relayMessage(jid, reset.message!, {
+      messageId: reset.key.id!,
+      additionalNodes: [buildBizResetNode()],
+    });
+    return { id: reset.key.id ?? '', timestamp: this.host.toUnixSeconds(reset.messageTimestamp) };
+  }
+
   async sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult> {
     this.host.ensureReady();
     const b = await this.host.loadLib();
@@ -901,23 +921,11 @@ export class BaileysMessaging {
 
     if (input.resetMarker) {
       // Best effort: the buttons already went out, so a failure here must not fail the send.
-      try {
-        const reset = b.generateWAMessageFromContent(
-          jid,
-          { conversation: input.resetMarker } as Parameters<typeof b.generateWAMessageFromContent>[1],
-          { userJid: this.host.normalizedSelfJid() },
-        );
-        await this.sock().relayMessage(jid, reset.message!, {
-          messageId: reset.key.id!,
-          additionalNodes: [buildBizResetNode()],
-        });
-        void this.host.putStoredMessage(reset)?.catch(() => undefined);
-        void this.emitOwnSendEcho(reset);
-      } catch (err) {
+      await this.resetBusinessMarker(chatId, input.resetMarker).catch(err =>
         this.host.logger.warn('Failed to send the business-marker reset after buttons', {
           error: err instanceof Error ? err.message : String(err),
-        });
-      }
+        }),
+      );
     }
 
     return { id: generated.key.id ?? '', timestamp: this.host.toUnixSeconds(generated.messageTimestamp) };

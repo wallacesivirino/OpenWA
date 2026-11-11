@@ -1350,6 +1350,12 @@ export interface MessagingCapability {
   sendButtonsMessage(chatId: string, input: ButtonsInput): Promise<MessageResult>;
 
   /**
+   * Clear the (i) "managed by a business" marker that interactive sends leave on the recipient's
+   * chat, with a message the clients do not display. Baileys only.
+   */
+  resetBusinessMarker?(chatId: string): Promise<MessageResult>;
+
+  /**
    * Send a list / menu. Baileys-only — whatsapp-web.js refuses with EngineNotSupportedError.
    */
   sendListMessage(chatId: string, input: ListInput): Promise<MessageResult>;
